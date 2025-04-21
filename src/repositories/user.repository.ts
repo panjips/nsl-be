@@ -3,13 +3,14 @@ import { TYPES } from "constant";
 import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { ILogger } from "utils";
-import { CreateUser, UserWithRole } from "models";
+import { CreateUser, UserResponse } from "models";
+import { UniqueError } from "utils/error/db.error";
 
 @injectable()
 export class UserRepository {
   constructor(
     @inject(TYPES.PrismaClient) private readonly prisma: PrismaClient,
-    @inject(TYPES.Logger) private readonly logger: ILogger
+    @inject(TYPES.Logger) private readonly logger: ILogger,
   ) {}
 
   async getAllUsers() {
@@ -58,12 +59,11 @@ export class UserRepository {
     }
   }
 
-  public async createUser(data: CreateUser): Promise<UserWithRole> {
+  public async createUser(data: CreateUser): Promise<UserResponse> {
     try {
       const user = await this.prisma.user.create({
         data: {
           ...data,
-          role_id: 4,
         },
         include: {
           role: true,
@@ -73,14 +73,18 @@ export class UserRepository {
       this.logger.info("User created successfully");
       return user;
     } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        throw new Error("Database error: " + error.message);
+      if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
+        throw new UniqueError("Unique constraint failed on the fields", {
+          field: (error.meta?.target as string[])[0],
+          message: (error.meta?.target as string[])[0] + " already exists",
+        });
       } else if (error instanceof PrismaClientKnownRequestError) {
         throw new Error("Database error: " + error.message);
       } else if (error instanceof Error) {
         throw new Error("Database error: " + error.message);
+      } else {
+        throw new Error("Unknown database error");
       }
-      throw new Error("Unknown database error");
     }
   }
 
@@ -165,9 +169,7 @@ export class UserRepository {
         },
       });
 
-      this.logger.info(
-        `Fetched user with phone ${user.phone_number} successfully`
-      );
+      this.logger.info(`Fetched user with phone ${user.phone_number} successfully`);
       return user;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {

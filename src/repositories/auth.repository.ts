@@ -9,18 +9,14 @@ import bcrypt from "bcrypt";
 export class AuthRepository {
   constructor(
     @inject(TYPES.PrismaClient) private readonly prisma: PrismaClient,
-    @inject(TYPES.Logger) private readonly logger: ILogger
+    @inject(TYPES.Logger) private readonly logger: ILogger,
   ) {}
 
   public async login(password: string, identifier: string) {
     try {
       const user = await this.prisma.user.findFirstOrThrow({
         where: {
-          OR: [
-            { username: identifier },
-            { phone_number: identifier },
-            { email: identifier },
-          ],
+          OR: [{ username: identifier }, { phone_number: identifier }, { email: identifier }],
         },
       });
 

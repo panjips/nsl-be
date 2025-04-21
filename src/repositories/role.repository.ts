@@ -3,12 +3,13 @@ import { TYPES } from "constant";
 import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { ILogger } from "utils";
+import { RoleResponse } from "models";
 
 @injectable()
 export class RoleRepository {
   constructor(
     @inject(TYPES.PrismaClient) private readonly prisma: PrismaClient,
-    @inject(TYPES.Logger) private readonly logger: ILogger
+    @inject(TYPES.Logger) private readonly logger: ILogger,
   ) {}
 
   async getAllRoles() {
@@ -27,7 +28,7 @@ export class RoleRepository {
     }
   }
 
-  async getRoleById(role: string) {
+  async getRoleById(role: string): Promise<RoleResponse> {
     try {
       const roleData = await this.prisma.role.findFirstOrThrow({
         where: {

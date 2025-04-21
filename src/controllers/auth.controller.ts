@@ -5,13 +5,14 @@ import { AuthService } from "services";
 import { Request, Response } from "express";
 import { RegisterDTO } from "dtos";
 import { ILogger, ApiResponse } from "utils";
+import { UniqueError } from "utils/error/db.error";
 
 @controller("/auth")
 export class AuthController {
   constructor(
     @inject(TYPES.AuthService)
     private readonly authService: AuthService,
-    @inject(TYPES.Logger) private readonly logger: ILogger
+    @inject(TYPES.Logger) private readonly logger: ILogger,
   ) {}
 
   @httpPost("/register")
@@ -23,12 +24,19 @@ export class AuthController {
         return ApiResponse.validationError(res, validate.error);
       }
 
-      await this.authService.register(validate.data);
+      const data = await this.authService.register(validate.data);
 
+      if (!data) {
+        this.logger.error("User registration failed");
+        return ApiResponse.error(res, "User registration failed", 500);
+      }
       this.logger.info("User registered successfully");
       return ApiResponse.created(res, "User created successfully");
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof UniqueError) {
+        this.logger.error("Unique constraint error: " + error.errors?.field);
+        return ApiResponse.error(res, error.message, 409, error.errors);
+      } else if (error instanceof Error) {
         this.logger.error("Registration error: " + error.message);
         return ApiResponse.error(res, error.message, 500);
       } else {

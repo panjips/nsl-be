@@ -21,11 +21,4 @@ type RegisterDTOType = z.infer<typeof RegisterDTO>;
 type LoginDTOType = z.infer<typeof LoginDTO>;
 type ForgotPasswordDTOType = z.infer<typeof ForgotPasswordDTO>;
 
-export {
-  RegisterDTO,
-  RegisterDTOType,
-  LoginDTO,
-  LoginDTOType,
-  ForgotPasswordDTO,
-  ForgotPasswordDTOType,
-};
+export { RegisterDTO, RegisterDTOType, LoginDTO, LoginDTOType, ForgotPasswordDTO, ForgotPasswordDTOType };

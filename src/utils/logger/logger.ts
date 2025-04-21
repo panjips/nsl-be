@@ -1,6 +1,6 @@
-import { injectable } from 'inversify';
-import { createLogger, format, transports, Logger } from 'winston';
-import { ILogger } from './logger.interface';
+import { injectable } from "inversify";
+import { createLogger, format, transports, Logger } from "winston";
+import { ILogger } from "./logger.interface";
 
 @injectable()
 export class LoggerService implements ILogger {
@@ -8,11 +8,11 @@ export class LoggerService implements ILogger {
 
   constructor() {
     this.logger = createLogger({
-      level: 'info',
+      level: "info",
       format: format.combine(
         format.colorize(),
         format.timestamp(),
-        format.printf(({ level, message, timestamp }) => `[${timestamp}] ${level}: ${message}`)
+        format.printf(({ level, message, timestamp }) => `[${timestamp}] ${level}: ${message}`),
       ),
       transports: [new transports.Console()],
     });
