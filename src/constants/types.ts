@@ -1,0 +1,15 @@
+export const TYPES = {
+  Logger: Symbol.for("Logger"),
+  PrismaClient: Symbol.for("PrismaClient"),
+  UserService: Symbol.for("UserService"),
+  UserRepository: Symbol.for("UserRepository"),
+  UserController: Symbol.for("UserController"),
+  AuthService: Symbol.for("AuthService"),
+  AuthController: Symbol.for("AuthController"),
+  AuthMiddleware: Symbol.for("AuthMiddleware"),
+  AuthRepository: Symbol.for("AuthRepository"),
+  AuthTokenService: Symbol.for("AuthTokenService"),
+  AuthTokenRepository: Symbol.for("AuthTokenRepository"),
+  AuthTokenController: Symbol.for("AuthTokenController"),
+  AuthTokenMiddleware: Symbol.for("AuthTokenMiddleware"),
+};

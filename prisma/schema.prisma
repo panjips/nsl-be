@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+  seed = "tsx prisma/seed.ts"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
+
+  users      User[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  role_id      Int
+  name         String   @db.VarChar(255)
+  email        String   @unique @db.VarChar(255)
+  username     String   @unique @db.VarChar(255)
+  password     String   @db.VarChar(255)
+  phone_number String   @db.VarChar(20)
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  deleted_at   DateTime? 
+
+  role         Role     @relation(fields: [role_id], references: [id])
+  passwordResetTokens PasswordResetToken[]
+  refreshTokens RefreshToken[]
+}
+
+model PasswordResetToken {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String
+  expires_at DateTime
+  is_used    Boolean  @default(false)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
+
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String
+  expires_at DateTime
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
+
+  user       User     @relation(fields: [user_id], references: [id])
+}
+

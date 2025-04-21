@@ -1,0 +1,37 @@
+{
+  "name": "nsl-be",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc --noEmit false --tsconfig tsconfig.json",
+    "start": "node dist/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "nodemon": "^3.1.9",
+    "prisma": "^6.6.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "inversify": "^6.2.2",
+    "inversify-express-utils": "^6.5.0",
+    "reflect-metadata": "^0.2.2",
+    "winston": "^3.17.0",
+    "zod": "^3.24.3"
+  }
+}
