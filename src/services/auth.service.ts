@@ -1,7 +1,7 @@
 import { TYPES } from "constant/types";
 import { RegisterDTOType } from "dtos";
 import { inject, injectable } from "inversify";
-import { AuthRepository } from "repositories/auth.repository";
+import { UserRepository } from "repositories";
 import bcrypt from "bcrypt";
 import { CreateUser } from "models";
 import { Role } from "constant";
@@ -10,7 +10,7 @@ import { Role } from "constant";
 export class AuthService {
   constructor(
     @inject(TYPES.AuthRepository)
-    private readonly authRepository: AuthRepository
+    private readonly userRepository: UserRepository
   ) {}
 
   public async register(data: RegisterDTOType): Promise<any> {
@@ -22,7 +22,7 @@ export class AuthService {
         password: hashedPassword,
         role_id: Number(Role.PELANGGAN),
       };
-      const userData = await this.authRepository.register(user);
+      const userData = await this.userRepository.createUser(user);
 
       return userData;
     } catch (error) {}

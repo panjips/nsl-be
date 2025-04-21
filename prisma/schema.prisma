@@ -26,7 +26,7 @@ model User {
   email        String   @unique @db.VarChar(255)
   username     String   @unique @db.VarChar(255)
   password     String   @db.VarChar(255)
-  phone_number String   @db.VarChar(20)
+  phone_number String   @unique @db.VarChar(20)
   is_active    Boolean  @default(true)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt

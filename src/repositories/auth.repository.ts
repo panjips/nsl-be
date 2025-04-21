@@ -1,9 +1,9 @@
-import { CreateUser, UserWithRole } from "models";
 import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
 import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { ILogger } from "utils";
+import bcrypt from "bcrypt";
 
 @injectable()
 export class AuthRepository {
@@ -12,19 +12,25 @@ export class AuthRepository {
     @inject(TYPES.Logger) private readonly logger: ILogger
   ) {}
 
-  public async register(data: CreateUser): Promise<UserWithRole> {
+  public async login(password: string, identifier: string) {
     try {
-      const user = await this.prisma.user.create({
-        data: {
-          ...data,
-          role_id: 4,
-        },
-        include: {
-          role: true,
+      const user = await this.prisma.user.findFirstOrThrow({
+        where: {
+          OR: [
+            { username: identifier },
+            { phone_number: identifier },
+            { email: identifier },
+          ],
         },
       });
 
-      this.logger.info("User created successfully");
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        throw new Error("Invalid password");
+      }
+
+      this.logger.info(`User ${user.username} logged in successfully`);
       return user;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
