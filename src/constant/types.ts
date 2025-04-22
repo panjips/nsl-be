@@ -1,6 +1,7 @@
 export const TYPES = {
   Logger: Symbol.for("Logger"),
   PrismaClient: Symbol.for("PrismaClient"),
+  JwtService: Symbol.for("JwtService"),
   UserService: Symbol.for("UserService"),
   UserRepository: Symbol.for("UserRepository"),
   AuthService: Symbol.for("AuthService"),

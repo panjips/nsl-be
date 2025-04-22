@@ -2,9 +2,8 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
 import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { ILogger } from "utils";
+import { ILogger, UniqueError } from "utils";
 import { CreateUser, UserResponse } from "models";
-import { UniqueError } from "utils/error/db.error";
 
 @injectable()
 export class UserRepository {

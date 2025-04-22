@@ -9,7 +9,7 @@ const RegisterDTO = z.object({
 });
 
 const LoginDTO = z.object({
-  email: z.string().email(),
+  identifier: z.string(),
   password: z.string().min(8),
 });
 
