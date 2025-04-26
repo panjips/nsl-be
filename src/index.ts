@@ -8,16 +8,16 @@ import { errorHandler } from "middleware";
 const server = new InversifyExpressServer(container);
 
 server.setConfig((app) => {
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
-  app.use(cookieParser());
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(cookieParser());
 });
 
 server.setErrorConfig((app) => {
-  app.use(errorHandler);
+    app.use(errorHandler);
 });
 
 const app = server.build();
 app.listen(config.port, () => {
-  console.log(`Server is running on port ${config.port}`);
+    console.log(`Server is running on port ${config.port}`);
 });

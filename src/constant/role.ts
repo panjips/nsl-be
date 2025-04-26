@@ -1,6 +1,6 @@
 export enum Role {
-  PEMILIK = "Pemilik",
-  KASIR = "Kasir",
-  STAF = "Staf",
-  PELANGGAN = "Pelanggan",
+    PEMILIK = "Pemilik",
+    KASIR = "Kasir",
+    STAF = "Staf",
+    PELANGGAN = "Pelanggan",
 }

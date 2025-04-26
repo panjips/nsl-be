@@ -1,52 +1,52 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "vcs": {
-    "enabled": false,
-    "clientKind": "git",
-    "useIgnoreFile": false
-  },
-  "formatter": {
-    "enabled": true,
-    "formatWithErrors": false,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineEnding": "lf",
-    "lineWidth": 100,
-    "attributePosition": "auto"
-  },
-  "files": {
-    "ignore": ["dist", "node_modules", "package.json", "prisma"]
-  },
-  "organizeImports": {
-    "enabled": true
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "style": {
-        "noInferrableTypes": "off",
-        "useTemplate": "off",
-        "noUselessElse": "off",
-        "useImportType": "off"
-      },
-      "correctness": {
-        "noInvalidUseBeforeDeclaration": "off"
-      },
-      "complexity": {
-        "noUselessConstructor": "off"
-      },
-      "suspicious": {
-        "noExplicitAny": "off"
-      }
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double"
+    "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+    "vcs": {
+        "enabled": false,
+        "clientKind": "git",
+        "useIgnoreFile": false
     },
-    "parser": {
-      "unsafeParameterDecoratorsEnabled": true
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": false,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineEnding": "lf",
+        "lineWidth": 100,
+        "attributePosition": "auto"
+    },
+    "files": {
+        "ignore": ["dist", "node_modules", "package.json", "prisma"]
+    },
+    "organizeImports": {
+        "enabled": true
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "style": {
+                "noInferrableTypes": "off",
+                "useTemplate": "off",
+                "noUselessElse": "off",
+                "useImportType": "off"
+            },
+            "correctness": {
+                "noInvalidUseBeforeDeclaration": "off"
+            },
+            "complexity": {
+                "noUselessConstructor": "off"
+            },
+            "suspicious": {
+                "noExplicitAny": "off"
+            }
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "double"
+        },
+        "parser": {
+            "unsafeParameterDecoratorsEnabled": true
+        }
     }
-  }
 }
