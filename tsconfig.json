@@ -31,8 +31,7 @@
         "declaration": true,
 
         /* Type Definitions */
-        "types": ["node", "reflect-metadata"],
-        "typeRoots": ["./node_modules/@types", "./src/types"]
+        "types": ["node", "reflect-metadata"]
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist"]
