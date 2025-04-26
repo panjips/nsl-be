@@ -1,6 +1,6 @@
 import { HttpStatus, TYPES } from "constant";
 import { inject } from "inversify";
-import { controller, cookies, httpPost, request, response, next } from "inversify-express-utils";
+import { controller, cookies, httpPost, request, response, next, BaseHttpController } from "inversify-express-utils";
 import type { AuthService } from "services";
 import type { NextFunction, Request, Response } from "express";
 import { ForgotPasswordDTO, LoginDTO, RegisterDTO, ResetPasswordDTO } from "dtos";
@@ -8,13 +8,15 @@ import { type ILogger, ApiResponse, type JwtService, CustomError } from "utils";
 import validateZod from "middleware/zod.middleware";
 
 @controller("/auth")
-export class AuthController {
+export class AuthController extends BaseHttpController {
     constructor(
         @inject(TYPES.AuthService)
         private readonly authService: AuthService,
         @inject(TYPES.Logger) private readonly logger: ILogger,
         @inject(TYPES.JwtService) private readonly jwtService: JwtService,
-    ) {}
+    ) {
+        super();
+    }
 
     @httpPost("/register", validateZod(RegisterDTO))
     public async register(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
@@ -36,9 +38,10 @@ export class AuthController {
 
             const accessToken = this.jwtService.signAccessToken({
                 id: data.id,
-                roleId: data.role_id,
+                role: data.role.name,
                 username: data.username,
                 email: data.email,
+                phone_number: data.phone_number,
             });
 
             const refreshToken = this.jwtService.signRefreshToken({
@@ -73,9 +76,10 @@ export class AuthController {
             const tokenData = await this.authService.refreshTokens(refreshToken);
             const accessToken = this.jwtService.signAccessToken({
                 id: tokenData.id,
-                roleId: tokenData.roleId,
+                role: tokenData.role,
                 username: tokenData.username,
                 email: tokenData.email,
+                phone_number: tokenData.phone_number,
             });
 
             this.logger.info("Token refreshed successfully");

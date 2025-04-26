@@ -1,8 +1,9 @@
 export interface AccessTokenPayload {
     id: number;
-    roleId: number;
-    username: string;
-    email: string;
+    role?: string;
+    username?: string;
+    email?: string;
+    phone_number?: string;
 }
 
 export interface RefreshTokenPayload {

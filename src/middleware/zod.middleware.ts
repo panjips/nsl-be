@@ -3,9 +3,9 @@ import type { Request, Response, NextFunction } from "express";
 import { HttpStatus } from "constant";
 import { ApiResponse } from "utils";
 
-function validateZod<T>(schema: ZodSchema<T>) {
+function validateZod<T>(schema: ZodSchema<T>, property: "body" | "query" | "params" = "body") {
     return (req: Request, res: Response, next: NextFunction) => {
-        const result = schema.safeParse(req.body);
+        const result = schema.safeParse(req[property]);
         if (!result.success) {
             const errors = result.error.errors.map((e) => ({
                 field: e.path.join("."),

@@ -107,9 +107,10 @@ export class AuthService extends BaseService {
 
         return {
             id: user.id,
-            roleId: user.role_id,
+            role: user.role.name,
             username: user.username,
             email: user.email,
+            phone_number: user.phone_number,
         };
     }
 

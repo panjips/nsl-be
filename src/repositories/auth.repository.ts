@@ -40,12 +40,25 @@ export class AuthRepository {
             where: {
                 token,
                 is_active: true,
+                is_used: true,
                 expires_at: {
                     gt: new Date(),
                 },
             },
             include: {
                 user: true,
+            },
+        });
+    }
+
+    async deactivatePasswordResetToken(id: number) {
+        await this.prisma.passwordResetToken.update({
+            where: {
+                id,
+            },
+            data: {
+                is_active: false,
+                is_used: false,
             },
         });
     }
@@ -74,7 +87,11 @@ export class AuthRepository {
                     },
                 },
                 include: {
-                    user: true,
+                    user: {
+                        include: {
+                            role: true,
+                        },
+                    },
                 },
             });
         } catch (error) {
