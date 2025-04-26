@@ -4,7 +4,7 @@ import { inject, injectable } from "inversify";
 import { RoleRepository, UserRepository, AuthRepository, AuthTokenRepository } from "repositories";
 import bcrypt from "bcrypt";
 import { CreateUser } from "models";
-import { Role } from "constant";
+import { HttpStatus, Role } from "constant";
 import { BaseService } from "./base.service";
 import { CustomError, ILogger } from "utils";
 
@@ -39,9 +39,13 @@ export class AuthService extends BaseService {
   public async login(password: string, identifier: string): Promise<any> {
     const user = await this.authRepository.login(identifier);
 
-    const isPasswordValid = await bcrypt.compare(password, user?.password);
-    if (!isPasswordValid || !user) {
-      throw new CustomError("Invalid credentials");
+    if (!user) {
+      throw new CustomError("Invalid credentials", HttpStatus.BAD_REQUEST);
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new CustomError("Invalid credentials", HttpStatus.BAD_REQUEST);
     }
 
     if (!user.is_active) {
