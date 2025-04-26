@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
-import { PrismaClient } from "@prisma/client";
-import { ILogger } from "utils";
+import type { PrismaClient } from "@prisma/client";
+import type { ILogger } from "utils";
 
 @injectable()
 export class AuthTokenRepository {

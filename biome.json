@@ -11,7 +11,7 @@
     "indentStyle": "space",
     "indentWidth": 2,
     "lineEnding": "lf",
-    "lineWidth": 120,
+    "lineWidth": 100,
     "attributePosition": "auto"
   },
   "files": {
@@ -23,7 +23,22 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "style": {
+        "noInferrableTypes": "off",
+        "useTemplate": "off",
+        "noUselessElse": "off",
+        "useImportType": "off"
+      },
+      "correctness": {
+        "noInvalidUseBeforeDeclaration": "off"
+      },
+      "complexity": {
+        "noUselessConstructor": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
     }
   },
   "javascript": {

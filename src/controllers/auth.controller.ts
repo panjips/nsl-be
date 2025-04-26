@@ -1,10 +1,11 @@
-import { TYPES } from "constant";
+import { HttpStatus, TYPES } from "constant";
 import { inject } from "inversify";
-import { controller, cookies, httpPost, request, response } from "inversify-express-utils";
-import { AuthService } from "services";
-import { Request, Response } from "express";
+import { controller, cookies, httpPost, request, response, next } from "inversify-express-utils";
+import type { AuthService } from "services";
+import type { NextFunction, Request, Response } from "express";
 import { LoginDTO, RegisterDTO } from "dtos";
-import { ILogger, ApiResponse, JwtService, UniqueError } from "utils";
+import { type ILogger, ApiResponse, type JwtService, CustomError } from "utils";
+import validateZod from "middleware/zod.middleware";
 
 @controller("/auth")
 export class AuthController {
@@ -15,54 +16,33 @@ export class AuthController {
     @inject(TYPES.JwtService) private readonly jwtService: JwtService,
   ) {}
 
-  @httpPost("/register")
-  public async register(@request() req: Request, @response() res: Response): Promise<Response> {
+  @httpPost("/register", validateZod(RegisterDTO))
+  public async register(
+    @request() req: Request,
+    @response() res: Response,
+    @next() next: NextFunction,
+  ) {
     try {
-      const validate = RegisterDTO.safeParse(req.body);
-      if (!validate.success) {
-        this.logger.error("Registration validation failed");
-        return ApiResponse.validationError(res, validate.error);
-      }
-
-      const data = await this.authService.register(validate.data);
-
-      if (!data) {
-        this.logger.error("User registration failed");
-        return ApiResponse.error(res, "User registration failed", 500);
-      }
+      await this.authService.register(req.body);
       this.logger.info("User registered successfully");
-      return ApiResponse.created(res, "User created successfully");
+      return res
+        .status(HttpStatus.CREATED)
+        .json(ApiResponse.created("User registered successfully"));
     } catch (error) {
-      if (error instanceof UniqueError) {
-        this.logger.error("Unique constraint error: " + error.errors?.field);
-        return ApiResponse.error(res, error.message, 409, error.errors);
-      } else if (error instanceof Error) {
-        this.logger.error("Registration error: " + error.message);
-        return ApiResponse.error(res, error.message, 500);
-      } else {
-        this.logger.error("Unknown error during registration");
-        return ApiResponse.error(res, "Unknown error", 500);
-      }
+      this.logger.error("User registration error");
+      next(error);
     }
   }
 
-  @httpPost("/login")
-  public async login(@request() req: Request, @response() res: Response): Promise<Response> {
+  @httpPost("/login", validateZod(LoginDTO))
+  public async login(
+    @request() req: Request,
+    @response() res: Response,
+    @next() next: NextFunction,
+  ) {
     try {
-      const validate = LoginDTO.safeParse(req.body);
-      if (!validate.success) {
-        this.logger.error("Login validation failed");
-        return ApiResponse.validationError(res, validate.error);
-      }
-
-      const { password, identifier } = validate.data;
-
+      const { password, identifier } = req.body;
       const data = await this.authService.login(password, identifier);
-
-      if (!data) {
-        this.logger.error("User login failed");
-        return ApiResponse.error(res, "User login failed", 401);
-      }
 
       const accessToken = this.jwtService.signAccessToken({
         id: data.id,
@@ -83,47 +63,42 @@ export class AuthController {
       });
 
       this.logger.info("User logged in successfully");
-      return ApiResponse.success(res, { ...data, token: accessToken }, "User logged in successfully");
+      return res
+        .status(HttpStatus.OK)
+        .json(ApiResponse.success("User logged in successfully", { token: accessToken }));
     } catch (error) {
-      if (error instanceof Error) {
-        this.logger.error("Login error: " + error.message);
-        return ApiResponse.error(res, error.message, 500);
-      } else {
-        this.logger.error("Unknown error during login");
-        return ApiResponse.error(res, "Unknown error", 500);
-      }
+      this.logger.error("User login error");
+      next(error);
     }
   }
 
   @httpPost("/refresh")
-  public async refreshToken(@cookies() refreshToken: string, @response() res: Response): Promise<Response> {
+  public async refreshToken(
+    @cookies() refreshToken: string,
+    @response() res: Response,
+    next: NextFunction,
+  ) {
     try {
       if (!refreshToken) {
-        return ApiResponse.error(res, "Refresh token not found", 401);
+        throw new CustomError("Refresh token not found", HttpStatus.UNAUTHORIZED);
       }
 
       const tokenData = await this.authService.refreshTokens(refreshToken);
 
-      return ApiResponse.success(
-        res,
-        {
-          token: this.jwtService.signAccessToken({
-            id: tokenData.id,
-            roleId: tokenData.roleId,
-            username: tokenData.username,
-            email: tokenData.email,
-          }),
-        },
-        "Tokens refreshed",
-      );
+      const accessToken = this.jwtService.signAccessToken({
+        id: tokenData.id,
+        roleId: tokenData.roleId,
+        username: tokenData.username,
+        email: tokenData.email,
+      });
+
+      this.logger.info("Token refreshed successfully");
+      return res
+        .status(HttpStatus.OK)
+        .json(ApiResponse.success("Token refreshed successfully", { token: accessToken }));
     } catch (error) {
-      if (error instanceof Error) {
-        this.logger.error("Token refresh error: " + error.message);
-        return ApiResponse.error(res, error.message, 500);
-      } else {
-        this.logger.error("Unknown error during token refresh");
-        return ApiResponse.error(res, "Unknown error", 500);
-      }
+      this.logger.error("Token refresh error");
+      return next(error);
     }
   }
 }

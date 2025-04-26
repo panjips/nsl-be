@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import { CreateUser } from "models";
 import { Role } from "constant";
 import { BaseService } from "./base.service";
+import { CustomError, ILogger } from "utils";
 
 @injectable()
 export class AuthService extends BaseService {
@@ -18,38 +19,37 @@ export class AuthService extends BaseService {
     private readonly authRepository: AuthRepository,
     @inject(TYPES.AuthTokenRepository)
     private readonly authTokenRepository: AuthTokenRepository,
+    @inject(TYPES.Logger) private readonly logger: ILogger,
   ) {
     super();
   }
 
-  public async register(data: RegisterDTOType): Promise<any> {
-    try {
-      const { id } = await this.roleRepository.getRoleById(Role.PELANGGAN);
-
-      const hashedPassword = await bcrypt.hash(data.password, 10);
-
-      const user: CreateUser = {
-        ...data,
-        password: hashedPassword,
-        role_id: id,
-      };
-
-      const userData = await this.userRepository.createUser(user);
-
-      return userData;
-    } catch (error) {
-      throw error;
-    }
+  public async register(data: RegisterDTOType) {
+    const { id } = await this.roleRepository.getRoleById(Role.PELANGGAN);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const user: CreateUser = {
+      ...data,
+      password: hashedPassword,
+      role_id: id,
+    };
+    const userData = await this.userRepository.createUser(user);
+    return userData;
   }
 
   public async login(password: string, identifier: string): Promise<any> {
-    try {
-      const user = await this.authRepository.login(password, identifier);
+    const user = await this.authRepository.login(identifier);
 
-      return this.excludeMetaFields(user, ["password"]);
-    } catch (error) {
-      throw error;
+    const isPasswordValid = await bcrypt.compare(password, user?.password);
+    if (!isPasswordValid || !user) {
+      throw new CustomError("Invalid credentials");
     }
+
+    if (!user.is_active) {
+      this.logger.warn(`Login attempt on inactive account: ${identifier}`);
+      throw new CustomError("Account is inactive");
+    }
+
+    return this.excludeMetaFields(user, ["password"]);
   }
 
   public async refreshTokens(refreshToken: string) {

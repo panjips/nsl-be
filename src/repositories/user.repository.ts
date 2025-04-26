@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
 import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { ILogger, UniqueError } from "utils";
+import { ILogger } from "utils";
 import { CreateUser, UserResponse } from "models";
 
 @injectable()
@@ -59,32 +59,17 @@ export class UserRepository {
   }
 
   public async createUser(data: CreateUser): Promise<UserResponse> {
-    try {
-      const user = await this.prisma.user.create({
-        data: {
-          ...data,
-        },
-        include: {
-          role: true,
-        },
-      });
+    const user = await this.prisma.user.create({
+      data: {
+        ...data,
+      },
+      include: {
+        role: true,
+      },
+    });
 
-      this.logger.info("User created successfully");
-      return user;
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
-        throw new UniqueError("Unique constraint failed on the fields", {
-          field: (error.meta?.target as string[])[0],
-          message: (error.meta?.target as string[])[0] + " already exists",
-        });
-      } else if (error instanceof PrismaClientKnownRequestError) {
-        throw new Error("Database error: " + error.message);
-      } else if (error instanceof Error) {
-        throw new Error("Database error: " + error.message);
-      } else {
-        throw new Error("Unknown database error");
-      }
-    }
+    this.logger.info("User inserted to the database");
+    return user;
   }
 
   async updateUser(id: number, data: any) {

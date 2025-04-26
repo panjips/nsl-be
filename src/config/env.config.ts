@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import path from "path";
+import path from "node:path";
 
 const NODE_ENV = process.env.NODE_ENV || "development";
 

@@ -1,40 +1,33 @@
-import { Response } from "express";
-import { ZodError } from "zod";
-import { ApiResponse as ApiSuccessResponse, ApiErrorResponse } from "./response.inteface";
+export class ApiResponse<T> {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data?: T;
+  errors?: any;
 
-export class ApiResponse {
-  static success<T>(res: Response, data: T, message: string = "Success", statusCode: number = 200): Response {
-    const response: ApiSuccessResponse<T> = {
-      success: true,
-      message,
-      data,
-    };
-    return res.status(statusCode).json(response);
+  constructor(params: {
+    statusCode: number;
+    success: boolean;
+    message: string;
+    data?: T;
+    errors?: any;
+  }) {
+    this.statusCode = params.statusCode;
+    this.success = params.success;
+    this.message = params.message;
+    if (params.data !== undefined) this.data = params.data;
+    if (params.errors !== undefined) this.errors = params.errors;
   }
 
-  static error(res: Response, message: string = "Error", statusCode: number = 500, errors?: any): Response {
-    const response: ApiErrorResponse = {
-      success: false,
-      message,
-    };
-
-    if (errors) {
-      response.errors = errors;
-    }
-
-    return res.status(statusCode).json(response);
+  static success<T>(message: string, data?: T, statusCode = 200) {
+    return new ApiResponse<T>({ statusCode, success: true, message, data });
   }
 
-  static created<T>(res: Response, data: T, message: string = "Created successfully"): Response {
-    return this.success(res, data, message, 201);
+  static created<T>(message = "Created", statusCode = 201) {
+    return new ApiResponse<T>({ statusCode, success: true, message });
   }
 
-  static validationError(res: Response, error: ZodError): Response {
-    const errors = error.errors.map((err) => ({
-      field: err.path.join("."),
-      message: err.message,
-    }));
-
-    return this.error(res, "Validation failed", 400, errors);
+  static error(message = "Error", statusCode = 400, errors?: any) {
+    return new ApiResponse<null>({ statusCode, success: false, message, errors });
   }
 }
