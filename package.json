@@ -23,6 +23,7 @@
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.14.1",
+    "@types/nodemailer": "^6.4.17",
     "nodemon": "^3.1.9",
     "prisma": "^6.6.0",
     "tsx": "^4.19.3",
@@ -37,6 +38,7 @@
     "inversify": "^6.2.2",
     "inversify-express-utils": "^6.5.0",
     "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.1",
     "reflect-metadata": "^0.2.2",
     "winston": "^3.17.0",
     "zod": "^3.24.3"

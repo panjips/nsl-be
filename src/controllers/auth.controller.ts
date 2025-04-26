@@ -3,7 +3,7 @@ import { inject } from "inversify";
 import { controller, cookies, httpPost, request, response, next } from "inversify-express-utils";
 import type { AuthService } from "services";
 import type { NextFunction, Request, Response } from "express";
-import { LoginDTO, RegisterDTO } from "dtos";
+import { ForgotPasswordDTO, LoginDTO, RegisterDTO, ResetPasswordDTO } from "dtos";
 import { type ILogger, ApiResponse, type JwtService, CustomError } from "utils";
 import validateZod from "middleware/zod.middleware";
 
@@ -17,17 +17,11 @@ export class AuthController {
     ) {}
 
     @httpPost("/register", validateZod(RegisterDTO))
-    public async register(
-        @request() req: Request,
-        @response() res: Response,
-        @next() next: NextFunction,
-    ) {
+    public async register(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             await this.authService.register(req.body);
             this.logger.info("User registered successfully");
-            return res
-                .status(HttpStatus.CREATED)
-                .json(ApiResponse.created("User registered successfully"));
+            return res.status(HttpStatus.CREATED).json(ApiResponse.created("User registered successfully"));
         } catch (error) {
             this.logger.error("User registration error");
             next(error);
@@ -35,11 +29,7 @@ export class AuthController {
     }
 
     @httpPost("/login", validateZod(LoginDTO))
-    public async login(
-        @request() req: Request,
-        @response() res: Response,
-        @next() next: NextFunction,
-    ) {
+    public async login(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const { password, identifier } = req.body;
             const data = await this.authService.login(password, identifier);
@@ -54,6 +44,7 @@ export class AuthController {
             const refreshToken = this.jwtService.signRefreshToken({
                 id: data.id,
             });
+            await this.authService.storeRefreshToken(data.id, refreshToken);
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
@@ -73,11 +64,7 @@ export class AuthController {
     }
 
     @httpPost("/refresh")
-    public async refreshToken(
-        @cookies() refreshToken: string,
-        @response() res: Response,
-        next: NextFunction,
-    ) {
+    public async refreshToken(@cookies() refreshToken: string, @response() res: Response, next: NextFunction) {
         try {
             if (!refreshToken) {
                 throw new CustomError("Refresh token not found", HttpStatus.UNAUTHORIZED);
@@ -101,20 +88,28 @@ export class AuthController {
         }
     }
 
-    public async forgetPassword(
-        @request() req: Request,
-        @response() res: Response,
-        @next() next: NextFunction,
-    ) {
+    @httpPost("/forgot-password", validateZod(ForgotPasswordDTO))
+    public async requestPasswordReset(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const { email } = req.body;
-            await this.authService.forgetPassword(email);
+            await this.authService.requestPasswordReset(email);
             this.logger.info("Password reset link sent successfully");
-            return res
-                .status(HttpStatus.OK)
-                .json(ApiResponse.success("Password reset link sent successfully"));
+            return res.status(HttpStatus.OK).json(ApiResponse.success("Password reset link sent successfully"));
         } catch (error) {
             this.logger.error("Error sending password reset link");
+            next(error);
+        }
+    }
+
+    @httpPost("/reset-password", validateZod(ResetPasswordDTO))
+    public async resetPassword(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+        try {
+            const { token, newPassword } = req.body;
+            await this.authService.resetPassword(token, newPassword);
+            this.logger.info("Password reset successfully");
+            return res.status(HttpStatus.OK).json(ApiResponse.success("Password reset successfully"));
+        } catch (error) {
+            this.logger.error("Error resetting password");
             next(error);
         }
     }

@@ -1,12 +1,13 @@
-import { TYPES } from "constant/types";
+import { TYPES } from "constant";
 import { RegisterDTOType } from "dtos";
 import { inject, injectable } from "inversify";
-import { RoleRepository, UserRepository, AuthRepository, AuthTokenRepository } from "repositories";
+import { RoleRepository, UserRepository, AuthRepository } from "repositories";
 import bcrypt from "bcrypt";
 import { CreateUser } from "models";
 import { HttpStatus, Role } from "constant";
 import { BaseService } from "./base.service";
-import { CustomError, ILogger } from "utils";
+import { CustomError, ILogger, MailService, JwtService } from "utils";
+import { config } from "config";
 
 @injectable()
 export class AuthService extends BaseService {
@@ -17,9 +18,10 @@ export class AuthService extends BaseService {
         private readonly roleRepository: RoleRepository,
         @inject(TYPES.AuthRepository)
         private readonly authRepository: AuthRepository,
-        @inject(TYPES.AuthTokenRepository)
-        private readonly authTokenRepository: AuthTokenRepository,
-        @inject(TYPES.Logger) private readonly logger: ILogger,
+        @inject(TYPES.Logger)
+        private readonly logger: ILogger,
+        @inject(TYPES.MailService) private readonly mailService: MailService,
+        @inject(TYPES.JwtService) private readonly jwtService: JwtService,
     ) {
         super();
     }
@@ -56,15 +58,48 @@ export class AuthService extends BaseService {
         return this.excludeMetaFields(user, ["password"]);
     }
 
-    public async forgetPassword(email: string): Promise<void> {
+    public async requestPasswordReset(email: string): Promise<void> {
         const user = await this.userRepository.getUserByEmail(email);
         if (!user) {
             throw new CustomError("User not found", HttpStatus.NOT_FOUND);
         }
+
+        const resetToken = this.jwtService.signResetToken({
+            id: user.id,
+        });
+
+        await this.authRepository.storePasswordResetToken(user.id, resetToken);
+        this.mailService.notify(
+            email,
+            "Password Reset Request",
+            `Click the link to reset your password: ${config.app.feUrl}/reset-password?token=${resetToken}`,
+        );
+        this.logger.info(`Password reset email sent to ${email}`);
+    }
+
+    public async resetPassword(token: string, newPassword: string): Promise<void> {
+        const decode = this.jwtService.decodeResetToken(token);
+        if (!decode) {
+            throw new CustomError("Invalid token", HttpStatus.UNAUTHORIZED);
+        }
+
+        const tokenData = await this.authRepository.findByPasswordResetToken(token);
+        if (!tokenData) {
+            throw new CustomError("Invalid token", HttpStatus.UNAUTHORIZED);
+        }
+
+        if (tokenData.expires_at < new Date()) {
+            throw new CustomError("Token expired", HttpStatus.UNAUTHORIZED);
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await this.userRepository.updateUser(decode.id, {
+            password: hashedPassword,
+        });
     }
 
     public async refreshTokens(refreshToken: string) {
-        const tokenRecord = await this.authTokenRepository.findByToken(refreshToken);
+        const tokenRecord = await this.authRepository.findByRefreshToken(refreshToken);
         if (!tokenRecord) {
             throw new Error("Invalid refresh token");
         }
@@ -79,14 +114,14 @@ export class AuthService extends BaseService {
     }
 
     public async logout(refreshToken: string): Promise<void> {
-        await this.authTokenRepository.invalidate(refreshToken);
+        await this.authRepository.invalidate(refreshToken);
     }
 
     public async logoutAll(userId: number): Promise<void> {
-        await this.authTokenRepository.invalidateAllUserTokens(userId);
+        await this.authRepository.invalidateAllUserTokens(userId);
     }
 
     public async storeRefreshToken(userId: number, token: string): Promise<void> {
-        await this.authTokenRepository.store(userId, token);
+        await this.authRepository.storeRefreshToken(userId, token);
     }
 }

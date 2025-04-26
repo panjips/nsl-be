@@ -7,15 +7,11 @@ function errorHandler(err: any, req: Request, res: Response, next: NextFunction)
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
         if (err.code === "P2002") {
             const target = err.meta?.target;
-            res.status(HttpStatus.CONFLICT).json(
-                ApiResponse.error(`${target} already exists`, HttpStatus.CONFLICT),
-            );
+            res.status(HttpStatus.CONFLICT).json(ApiResponse.error(`${target} already exists`, HttpStatus.CONFLICT));
         }
 
         if (err.code === "P2025") {
-            res.status(HttpStatus.NOT_FOUND).json(
-                ApiResponse.error("Record not found", HttpStatus.NOT_FOUND),
-            );
+            res.status(HttpStatus.NOT_FOUND).json(ApiResponse.error("Record not found", HttpStatus.NOT_FOUND));
         }
     }
 

@@ -14,9 +14,7 @@ export class JwtService {
                 expiresIn: "6h",
             });
         } catch (error) {
-            this.logger.error(
-                `Error signing access token: ${error instanceof Error ? error.message : String(error)}`,
-            );
+            this.logger.error(`Error signing access token: ${error instanceof Error ? error.message : String(error)}`);
             throw new Error("Failed to generate access token");
         }
     }
@@ -27,10 +25,19 @@ export class JwtService {
                 expiresIn: "7d",
             });
         } catch (error) {
-            this.logger.error(
-                `Error signing refresh token: ${error instanceof Error ? error.message : String(error)}`,
-            );
+            this.logger.error(`Error signing refresh token: ${error instanceof Error ? error.message : String(error)}`);
             throw new Error("Failed to generate refresh token");
+        }
+    }
+
+    signResetToken(payload: RefreshTokenPayload): string {
+        try {
+            return jwt.sign(payload, config.jwt.accessTokenSecret, {
+                expiresIn: "1h",
+            });
+        } catch (error) {
+            this.logger.error(`Error signing access token: ${error instanceof Error ? error.message : String(error)}`);
+            throw new Error("Failed to generate access token");
         }
     }
 
@@ -57,6 +64,15 @@ export class JwtService {
                 throw new Error("Invalid refresh token");
             }
             throw new Error("Failed to verify refresh token");
+        }
+    }
+
+    decodeResetToken(token: string): RefreshTokenPayload {
+        try {
+            return jwt.decode(token) as RefreshTokenPayload;
+        } catch (error) {
+            this.logger.error(`Error decoding reset token: ${error instanceof Error ? error.message : String(error)}`);
+            throw new Error("Failed to decode reset token");
         }
     }
 
