@@ -20,4 +20,4 @@ function validateZod<T>(schema: ZodSchema<T>, property: "body" | "query" | "para
     };
 }
 
-export default validateZod;
+export { validateZod };

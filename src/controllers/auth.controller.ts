@@ -5,7 +5,7 @@ import type { AuthService } from "services";
 import type { NextFunction, Request, Response } from "express";
 import { ForgotPasswordDTO, LoginDTO, RegisterDTO, ResetPasswordDTO } from "dtos";
 import { type ILogger, ApiResponse, type JwtService, CustomError } from "utils";
-import validateZod from "middleware/zod.middleware";
+import { validateZod } from "middleware";
 
 @controller("/auth")
 export class AuthController extends BaseHttpController {
