@@ -4,6 +4,7 @@ export const TYPES = {
     JwtService: Symbol.for("JwtService"),
     MailService: Symbol.for("MailService"),
     RedisService: Symbol.for("RedisService"),
+    R2Service: Symbol.for("R2Service"),
     AuthMiddleware: Symbol.for("AuthMiddleware"),
     UserService: Symbol.for("UserService"),
     UserRepository: Symbol.for("UserRepository"),

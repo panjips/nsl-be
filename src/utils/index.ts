@@ -5,3 +5,4 @@ export * from "./jwt";
 export * from "./errors";
 export * from "./mail";
 export * from "./redis/redis";
+export * from "./r2";
