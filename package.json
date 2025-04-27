@@ -11,7 +11,9 @@
     "lint": "biome lint .",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "docker:up": "docker-compose --env-file .env.development up",
+    "docker:build": "docker-compose --env-file .env.development up --build"
   },
   "keywords": [],
   "author": "",
@@ -37,6 +39,7 @@
     "express": "^4.21.2",
     "inversify": "^6.2.2",
     "inversify-express-utils": "^6.5.0",
+    "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.10.1",
     "reflect-metadata": "^0.2.2",

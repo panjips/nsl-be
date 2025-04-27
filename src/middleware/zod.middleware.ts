@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from "express";
 import { HttpStatus } from "constant";
 import { ApiResponse } from "utils";
 
-function validateZod<T>(schema: ZodSchema<T>, property: "body" | "query" | "params" = "body") {
+function ZodValidation<T>(schema: ZodSchema<T>, property: "body" | "query" | "params" = "body") {
     return (req: Request, res: Response, next: NextFunction) => {
         const result = schema.safeParse(req[property]);
         if (!result.success) {
@@ -20,4 +20,4 @@ function validateZod<T>(schema: ZodSchema<T>, property: "body" | "query" | "para
     };
 }
 
-export { validateZod };
+export { ZodValidation };

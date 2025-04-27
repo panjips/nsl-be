@@ -5,7 +5,7 @@ import type { AuthService } from "services";
 import type { NextFunction, Request, Response } from "express";
 import { ForgotPasswordDTO, LoginDTO, RegisterDTO, ResetPasswordDTO } from "dtos";
 import { type ILogger, ApiResponse, type JwtService, CustomError } from "utils";
-import { validateZod } from "middleware";
+import { ZodValidation } from "middleware";
 
 @controller("/auth")
 export class AuthController extends BaseHttpController {
@@ -18,7 +18,7 @@ export class AuthController extends BaseHttpController {
         super();
     }
 
-    @httpPost("/register", validateZod(RegisterDTO))
+    @httpPost("/register", ZodValidation(RegisterDTO))
     public async register(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             await this.authService.register(req.body);
@@ -30,7 +30,7 @@ export class AuthController extends BaseHttpController {
         }
     }
 
-    @httpPost("/login", validateZod(LoginDTO))
+    @httpPost("/login", ZodValidation(LoginDTO))
     public async login(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const { password, identifier } = req.body;
@@ -92,7 +92,7 @@ export class AuthController extends BaseHttpController {
         }
     }
 
-    @httpPost("/forgot-password", validateZod(ForgotPasswordDTO))
+    @httpPost("/forgot-password", ZodValidation(ForgotPasswordDTO))
     public async requestPasswordReset(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const { email } = req.body;
@@ -105,7 +105,7 @@ export class AuthController extends BaseHttpController {
         }
     }
 
-    @httpPost("/reset-password", validateZod(ResetPasswordDTO))
+    @httpPost("/reset-password", ZodValidation(ResetPasswordDTO))
     public async resetPassword(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const { token, newPassword } = req.body;

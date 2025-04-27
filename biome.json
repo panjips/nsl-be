@@ -37,7 +37,11 @@
                 "noUselessConstructor": "off"
             },
             "suspicious": {
-                "noExplicitAny": "off"
+                "noExplicitAny": "off",
+                "noGlobalIsNan": "off"
+            },
+            "performance": {
+                "noDelete": "off"
             }
         }
     },

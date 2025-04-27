@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import path from "node:path";
 
 const NODE_ENV = process.env.NODE_ENV || "development";
-
 dotenv.config({
     path: path.resolve(process.cwd(), `.env.${NODE_ENV}`),
 });
@@ -17,6 +16,10 @@ const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
 
 const APP_URL = process.env.APP_URL || "";
 const FE_APP_URL = process.env.FE_APP_URL || "";
+
+const REDIS_HOST = process.env.REDIS_HOST || "";
+const REDIS_PORT = process.env.REDIS_PORT || "";
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD || "";
 
 export const config = {
     port: process.env.PORT || 3000,
@@ -35,5 +38,10 @@ export const config = {
     app: {
         url: APP_URL,
         feUrl: FE_APP_URL,
+    },
+    redis: {
+        host: REDIS_HOST,
+        port: Number(REDIS_PORT) || 6379,
+        password: REDIS_PASSWORD || "",
     },
 };

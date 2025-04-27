@@ -18,16 +18,29 @@ services:
   db:
     image: postgres:15
     restart: always
+    container_name: nsl-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5151:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
       - nsl-network
+  
+  redis:
+    image: redis:7
+    restart: always
+    container_name: nsl-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "${REDIS_PORT}:6379"
+    networks:
+        - nsl-network
+
 
   # pgadmin:
   #   image: dpage/pgadmin4

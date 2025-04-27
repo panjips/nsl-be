@@ -1,11 +1,14 @@
 export class BaseService {
-    protected excludeMetaFields<T extends Record<string, any>, K extends keyof T>(
-        obj: T,
-        extras: K[] = [],
-    ): Partial<T> {
+    protected excludeMetaFields<T extends Record<string, any>, K>(obj: T, extras: K[] = []): Partial<T> {
         const excludedKeys = ["created_at", "updated_at", "deleted_at", ...extras];
-        const result: any = {};
 
+        if (Array.isArray(obj)) {
+            return obj.map((item) =>
+                typeof item === "object" && item !== null ? this.excludeMetaFields(item, extras) : item,
+            ) as unknown as T;
+        }
+
+        const result: any = {};
         for (const key in obj) {
             const value = obj[key];
 

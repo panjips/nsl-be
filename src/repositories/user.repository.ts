@@ -36,26 +36,17 @@ export class UserRepository {
     }
 
     async getUserById(id: number) {
-        try {
-            const user = await this.prisma.user.findFirstOrThrow({
-                where: {
-                    id,
-                },
-                include: {
-                    role: true,
-                },
-            });
+        const user = await this.prisma.user.findFirst({
+            where: {
+                id,
+            },
+            include: {
+                role: true,
+            },
+        });
 
-            this.logger.info(`Fetched user with ID ${user.id} successfully`);
-            return user;
-        } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError) {
-                throw new Error("Database error: " + error.message);
-            } else if (error instanceof Error) {
-                throw new Error("Database error: " + error.message);
-            }
-            throw new Error("Unknown database error");
-        }
+        this.logger.info(`Fetched user with ID ${user?.id} successfully`);
+        return user;
     }
 
     public async createUser(data: CreateUser): Promise<UserResponse> {
@@ -73,50 +64,32 @@ export class UserRepository {
     }
 
     async updateUser(id: number, data: any) {
-        try {
-            const updatedUser = await this.prisma.user.update({
-                where: {
-                    id,
-                },
-                data,
-                include: {
-                    role: true,
-                },
-            });
+        const updatedUser = await this.prisma.user.update({
+            where: {
+                id,
+            },
+            data,
+            include: {
+                role: true,
+            },
+        });
 
-            this.logger.info(`Updated user with ID ${updatedUser.id} successfully`);
-            return updatedUser;
-        } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError) {
-                throw new Error("Database error: " + error.message);
-            } else if (error instanceof Error) {
-                throw new Error("Database error: " + error.message);
-            }
-            throw new Error("Unknown database error");
-        }
+        this.logger.info(`Updated user with ID ${updatedUser.id} successfully`);
+        return updatedUser;
     }
 
     async deleteUser(id: number) {
-        try {
-            const deletedUser = await this.prisma.user.update({
-                where: {
-                    id,
-                },
-                data: {
-                    is_active: false,
-                },
-            });
+        const deletedUser = await this.prisma.user.update({
+            where: {
+                id,
+            },
+            data: {
+                is_active: false,
+            },
+        });
 
-            this.logger.info(`Deleted user with ID ${deletedUser.id} successfully`);
-            return deletedUser;
-        } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError) {
-                throw new Error("Database error: " + error.message);
-            } else if (error instanceof Error) {
-                throw new Error("Database error: " + error.message);
-            }
-            throw new Error("Unknown database error");
-        }
+        this.logger.info(`Deleted user with ID ${deletedUser.id} successfully`);
+        return deletedUser;
     }
 
     async getUserByEmail(email: string) {
