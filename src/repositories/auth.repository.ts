@@ -63,17 +63,16 @@ export class AuthRepository {
         });
     }
 
-    async storeRefreshToken(userId: number, token: string): Promise<void> {
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
-        await this.prisma.refreshToken.create({
+    async storeRefreshToken(userId: number, token: string, expiresAt: Date): Promise<any> {
+        const tokenData = await this.prisma.refreshToken.create({
             data: {
                 user_id: userId,
-                token: token,
+                token,
                 expires_at: expiresAt,
             },
         });
         this.logger.info(`Refresh token stored for user ${userId}`);
+        return tokenData;
     }
 
     async findByRefreshToken(token: string) {
@@ -102,27 +101,20 @@ export class AuthRepository {
         }
     }
 
-    async invalidate(token: string): Promise<void> {
-        try {
-            await this.prisma.refreshToken.updateMany({
-                where: {
-                    token,
-                },
-                data: {
-                    is_active: false,
-                },
-            });
+    async invalidateRefreshToken(token: string) {
+        const tokenData = await this.prisma.refreshToken.updateMany({
+            where: {
+                AND: [{ token }, { is_active: true }],
+            },
+            data: {
+                is_active: false,
+            },
+        });
 
-            this.logger.info("Refresh token invalidated");
-        } catch (error) {
-            this.logger.error(
-                `Failed to invalidate refresh token: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            throw new Error("Failed to invalidate refresh token");
-        }
+        return tokenData;
     }
 
-    async invalidateAllUserTokens(userId: number): Promise<void> {
+    async invalidateAllUserRefreshTokens(userId: number): Promise<void> {
         try {
             await this.prisma.refreshToken.updateMany({
                 where: {

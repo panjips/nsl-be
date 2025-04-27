@@ -4,7 +4,7 @@ import { Container } from "inversify";
 import { TYPES } from "constant";
 import { AuthRepository, RoleRepository, UserRepository } from "repositories";
 import { AuthService, UserService } from "services";
-import { ILogger, LoggerService, prisma, JwtService, MailService, RedisService, R2Service } from "utils";
+import { ILogger, LoggerService, prisma, JwtService, MailService, RedisService, R2Service, QueueService } from "utils";
 import { AuthMiddleware } from "middleware";
 
 const container = new Container();
@@ -16,6 +16,7 @@ container.bind<MailService>(TYPES.MailService).to(MailService).inSingletonScope(
 container.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inSingletonScope();
 container.bind<RedisService>(TYPES.RedisService).to(RedisService).inSingletonScope();
 container.bind<R2Service>(TYPES.R2Service).to(R2Service).inSingletonScope();
+container.bind<QueueService>(TYPES.QueueService).to(QueueService).inSingletonScope();
 
 container.bind<AuthRepository>(TYPES.AuthRepository).to(AuthRepository);
 container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository);

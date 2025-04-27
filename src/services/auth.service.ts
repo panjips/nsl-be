@@ -1,4 +1,4 @@
-import { TYPES } from "constant";
+import { JOB_KEY, QUEUE_KEY, TYPES } from "constant";
 import { RegisterDTOType } from "dtos";
 import { inject, injectable } from "inversify";
 import { RoleRepository, UserRepository, AuthRepository } from "repositories";
@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 import { CreateUser } from "models";
 import { HttpStatus, Role } from "constant";
 import { BaseService } from "./base.service";
-import { CustomError, ILogger, MailService, JwtService } from "utils";
+import { CustomError, ILogger, MailService, JwtService, QueueService } from "utils";
 import { config } from "config";
 
 @injectable()
@@ -18,12 +18,25 @@ export class AuthService extends BaseService {
         private readonly roleRepository: RoleRepository,
         @inject(TYPES.AuthRepository)
         private readonly authRepository: AuthRepository,
+        @inject(TYPES.QueueService) private readonly queueService: QueueService,
         @inject(TYPES.Logger)
         private readonly logger: ILogger,
         @inject(TYPES.MailService) private readonly mailService: MailService,
         @inject(TYPES.JwtService) private readonly jwtService: JwtService,
     ) {
         super();
+
+        this.initializeQueue();
+    }
+
+    private initializeQueue(): void {
+        this.queueService.createQueue(QUEUE_KEY.TOKEN_QUEUE);
+
+        this.queueService.registerProcessor(JOB_KEY.REMOVE_REFRESH_TOKEN_JOB, async (job) =>
+            this.processRemoveRefreshToken(job),
+        );
+
+        this.logger.info("Token management queue initialized");
     }
 
     public async register(data: RegisterDTOType) {
@@ -115,14 +128,34 @@ export class AuthService extends BaseService {
     }
 
     public async logout(refreshToken: string): Promise<void> {
-        await this.authRepository.invalidate(refreshToken);
+        const token = await this.authRepository.invalidateRefreshToken(refreshToken);
+        if (!token) {
+            throw new CustomError("Invalid token", HttpStatus.UNAUTHORIZED);
+        }
     }
 
     public async logoutAll(userId: number): Promise<void> {
-        await this.authRepository.invalidateAllUserTokens(userId);
+        await this.authRepository.invalidateAllUserRefreshTokens(userId);
     }
 
     public async storeRefreshToken(userId: number, token: string): Promise<void> {
-        await this.authRepository.storeRefreshToken(userId, token);
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+        const tokenData = await this.authRepository.storeRefreshToken(userId, token, expiresAt);
+
+        const expirationDelay = expiresAt.getTime() - Date.now();
+        await this.queueService.addJob(
+            QUEUE_KEY.TOKEN_QUEUE,
+            JOB_KEY.REMOVE_REFRESH_TOKEN_JOB,
+            { tokenId: tokenData.id, token },
+            { delay: expirationDelay },
+        );
+    }
+
+    private async processRemoveRefreshToken(job: any): Promise<void> {
+        const { tokenId, token } = job.data;
+        await this.authRepository.invalidateRefreshToken(token);
+
+        this.logger.info(`Successfully removed expired refresh token: ${tokenId}`);
     }
 }

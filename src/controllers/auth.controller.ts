@@ -49,11 +49,12 @@ export class AuthController extends BaseHttpController {
             });
             await this.authService.storeRefreshToken(data.id, refreshToken);
 
+            console.log(refreshToken);
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
                 secure: true,
                 sameSite: "strict",
-                path: "/auth/refresh",
+                path: "/auth",
             });
 
             this.logger.info("User logged in successfully");
@@ -67,13 +68,17 @@ export class AuthController extends BaseHttpController {
     }
 
     @httpPost("/refresh")
-    public async refreshToken(@cookies() refreshToken: string, @response() res: Response, next: NextFunction) {
+    public async refreshToken(
+        @cookies() cookies: { refreshToken: string },
+        @response() res: Response,
+        next: NextFunction,
+    ) {
         try {
-            if (!refreshToken) {
+            if (!cookies.refreshToken) {
                 throw new CustomError("Refresh token not found", HttpStatus.UNAUTHORIZED);
             }
 
-            const tokenData = await this.authService.refreshTokens(refreshToken);
+            const tokenData = await this.authService.refreshTokens(cookies.refreshToken);
             const accessToken = this.jwtService.signAccessToken({
                 id: tokenData.id,
                 role: tokenData.role,
@@ -114,6 +119,29 @@ export class AuthController extends BaseHttpController {
             return res.status(HttpStatus.OK).json(ApiResponse.success("Password reset successfully"));
         } catch (error) {
             this.logger.error("Error resetting password");
+            next(error);
+        }
+    }
+
+    @httpPost("/logout", TYPES.AuthMiddleware)
+    public async logout(@cookies() cookies: { refreshToken: string }, @response() res: Response, next: NextFunction) {
+        try {
+            if (!cookies.refreshToken) {
+                throw new CustomError("Refresh token not found", HttpStatus.UNAUTHORIZED);
+            }
+
+            await this.authService.logout(cookies.refreshToken);
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict",
+                path: "/auth",
+            });
+
+            this.logger.info("User logged out successfully");
+            return res.status(HttpStatus.OK).json(ApiResponse.success("User logged out successfully"));
+        } catch (error) {
+            this.logger.error("User logout error cause by: ", error);
             next(error);
         }
     }
