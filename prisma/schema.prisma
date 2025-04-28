@@ -64,3 +64,30 @@ model RefreshToken {
   user       User     @relation(fields: [user_id], references: [id])
 }
 
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  is_active   Boolean   @default(true)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now())
+  deleted_at  DateTime?
+
+  products    Product[]
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  category_id Int?
+  name        String
+  description String?
+  image_url   String?
+  cost        Decimal    @db.Decimal(10, 2)
+  price       Decimal    @db.Decimal(10, 2)
+  is_active   Boolean    @default(true)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @default(now())
+  deleted_at  DateTime?
+
+  category    Category?  @relation(fields: [category_id], references: [id])
+}
