@@ -16,6 +16,9 @@ export class ProductRepository {
             where: {
                 is_active: true,
             },
+            include: {
+                category: true,
+            },
         });
     }
 
@@ -25,6 +28,21 @@ export class ProductRepository {
                 id,
                 is_active: true,
             },
+            include: {
+                category: true,
+            },
+        });
+    }
+
+    async findByCategory(categoryId: number): Promise<Product[]> {
+        return await this.prisma.product.findMany({
+            where: {
+                category_id: categoryId,
+                is_active: true,
+            },
+            include: {
+                category: true,
+            },
         });
     }
 
@@ -33,9 +51,12 @@ export class ProductRepository {
             data: {
                 ...product,
             },
+            include: {
+                category: true,
+            },
         });
 
-        this.logger.info(`Product ${product.name} inserted to the database`);
+        this.logger.info(`Product ${product.name} created with ID ${data.id}`);
         return data;
     }
 
@@ -48,9 +69,12 @@ export class ProductRepository {
                 ...product,
                 updated_at: new Date(),
             },
+            include: {
+                category: true,
+            },
         });
 
-        this.logger.info(`Product ${product.name} updated in the database`);
+        this.logger.info(`Product ${id} updated successfully`);
         return data;
     }
 
@@ -65,7 +89,7 @@ export class ProductRepository {
             },
         });
 
-        this.logger.info(`Product with ID ${id} deleted from the database`);
+        this.logger.info(`Product ${id} soft deleted`);
         return !!data;
     }
 }

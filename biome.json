@@ -34,11 +34,13 @@
                 "noInvalidUseBeforeDeclaration": "off"
             },
             "complexity": {
-                "noUselessConstructor": "off"
+                "noUselessConstructor": "off",
+                "noForEach": "off"
             },
             "suspicious": {
                 "noExplicitAny": "off",
-                "noGlobalIsNan": "off"
+                "noGlobalIsNan": "off",
+                "noImplicitAnyLet": "off"
             },
             "performance": {
                 "noDelete": "off"

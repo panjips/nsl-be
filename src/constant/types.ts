@@ -15,4 +15,6 @@ export const TYPES = {
     RoleRepository: Symbol.for("RoleRepository"),
     CategoryService: Symbol.for("CategoryService"),
     CategoryRepository: Symbol.for("CategoryRepository"),
+    ProductService: Symbol.for("ProductService"),
+    ProductRepository: Symbol.for("ProductRepository"),
 };

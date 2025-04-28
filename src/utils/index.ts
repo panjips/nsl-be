@@ -7,3 +7,4 @@ export * from "./mail";
 export * from "./redis/redis";
 export * from "./r2";
 export * from "./queue";
+export * from "./multer";
