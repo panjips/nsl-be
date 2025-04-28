@@ -16,7 +16,7 @@ import {} from "dtos";
 import { type ILogger, ApiResponse, CustomError } from "utils";
 import { ZodValidation, RoleMiddlewareFactory } from "middleware";
 import { UserService } from "services";
-import { CreateUserDTO } from "dtos/user/user.dto";
+import { CreateUserDTO } from "dtos/user.dto";
 
 @controller("/user", TYPES.AuthMiddleware)
 export class UserController extends BaseHttpController {

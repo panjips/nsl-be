@@ -2,8 +2,8 @@ import "../controllers";
 import { PrismaClient } from "@prisma/client";
 import { Container } from "inversify";
 import { TYPES } from "constant";
-import { AuthRepository, RoleRepository, UserRepository } from "repositories";
-import { AuthService, UserService } from "services";
+import { AuthRepository, CategoryRepository, RoleRepository, UserRepository } from "repositories";
+import { AuthService, CategoryService, UserService } from "services";
 import { ILogger, LoggerService, prisma, JwtService, MailService, RedisService, R2Service, QueueService } from "utils";
 import { AuthMiddleware } from "middleware";
 
@@ -21,8 +21,10 @@ container.bind<QueueService>(TYPES.QueueService).to(QueueService).inSingletonSco
 container.bind<AuthRepository>(TYPES.AuthRepository).to(AuthRepository);
 container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository);
 container.bind<RoleRepository>(TYPES.RoleRepository).to(RoleRepository);
+container.bind<CategoryRepository>(TYPES.CategoryRepository).to(CategoryRepository);
 
 container.bind<AuthService>(TYPES.AuthService).to(AuthService);
 container.bind<UserService>(TYPES.UserService).to(UserService);
+container.bind<CategoryService>(TYPES.CategoryService).to(CategoryService);
 
 export { container };
