@@ -51,7 +51,7 @@ export class ProductService extends BaseService {
         try {
             this.logger.info("Background job: Processing image deletion");
             const url = new URL(imageUrl);
-            const imagePath = url.pathname.substring(1);
+            const imagePath = decodeURIComponent(url.pathname.substring(1));
 
             await this.r2Service.deleteFile(imagePath);
             this.logger.info(`Background job: Successfully deleted image at ${imagePath}`);

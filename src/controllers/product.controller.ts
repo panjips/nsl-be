@@ -21,7 +21,8 @@ import { CreateProductDTO, UpdateProductDTO } from "dtos";
 @controller("/product", TYPES.AuthMiddleware)
 export class ProductController extends BaseHttpController {
     constructor(
-        @inject(TYPES.ProductService) private readonly productService: ProductService,
+        @inject(TYPES.ProductService)
+        private readonly productService: ProductService,
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {
         super();
@@ -85,7 +86,6 @@ export class ProductController extends BaseHttpController {
                 throw new CustomError("Invalid product ID", HttpStatus.BAD_REQUEST);
             }
 
-            // The middleware has already validated the data
             const product = await this.productService.updateProduct(id, req.body, req.file);
 
             return res.status(HttpStatus.OK).json(ApiResponse.success("Product updated successfully", product));

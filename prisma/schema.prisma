@@ -70,7 +70,7 @@ model Category {
   description String?
   is_active   Boolean   @default(true)
   created_at  DateTime  @default(now())
-  updated_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
   deleted_at  DateTime?
 
   products    Product[]
@@ -86,7 +86,7 @@ model Product {
   price       Decimal    @db.Decimal(10, 2)
   is_active   Boolean    @default(true)
   created_at  DateTime   @default(now())
-  updated_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
   deleted_at  DateTime?
 
   category    Category?  @relation(fields: [category_id], references: [id])

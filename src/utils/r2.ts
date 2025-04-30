@@ -14,7 +14,9 @@ export class R2Service {
             credentials: {
                 accessKeyId: config.r2.accessKeyId,
                 secretAccessKey: config.r2.secretAccessKey,
+                accountId: config.r2.account_id,
             },
+            forcePathStyle: true,
         });
 
         this.bucketName = config.r2.bucket;
@@ -30,7 +32,7 @@ export class R2Service {
 
         await this.s3Client.send(command);
 
-        return `${config.r2.endpoint}/${fileName}`;
+        return `${config.r2.publicUrl}/${fileName}`;
     }
 
     async deleteFile(fileName: string) {

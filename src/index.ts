@@ -4,6 +4,8 @@ import express from "express";
 import { container, config } from "config";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "middleware";
+import { ILogger } from "utils";
+import { TYPES } from "constant";
 
 const server = new InversifyExpressServer(container);
 
@@ -17,7 +19,9 @@ server.setErrorConfig((app) => {
     app.use(errorHandler);
 });
 
+const logger = container.get<ILogger>(TYPES.Logger);
 const app = server.build();
 app.listen(config.port, () => {
-    console.log(`Server is running on port ${config.port}`);
+    logger.info(`Server is running on port ${config.port}`);
+    logger.info(`Environment: ${config.env}`);
 });

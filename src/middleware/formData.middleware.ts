@@ -19,7 +19,12 @@ function FormDataZodValidation<T>(schema: ZodSchema<T>, fileField: string = "ima
                 if (value === undefined || value === "") {
                     return;
                 }
-                formData[key] = value;
+
+                if (!isNaN(Number(value))) {
+                    formData[key] = Number(value);
+                } else {
+                    formData[key] = value;
+                }
             });
 
             const result = schema.safeParse(formData);
