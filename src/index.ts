@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "middleware";
 import { ILogger } from "utils";
 import { TYPES } from "constant";
+import { swagger } from "docs";
 
 const server = new InversifyExpressServer(container);
 
@@ -13,6 +14,7 @@ server.setConfig((app) => {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(cookieParser());
+    swagger(app);
 });
 
 server.setErrorConfig((app) => {

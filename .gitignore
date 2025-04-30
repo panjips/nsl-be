@@ -9,3 +9,5 @@ package-lock.json
 
 dist
 build
+
+src/docs/swagger.json
