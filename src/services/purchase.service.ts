@@ -67,16 +67,13 @@ export class PurchaseService extends BaseService {
 
     async createPurchase(data: CreatePurchase) {
         try {
-            // First check if the inventory exists
             const inventory = await this.inventoryRepository.findById(data.inventory_id);
             if (!inventory) {
                 throw new CustomError("Inventory item not found", HttpStatus.NOT_FOUND);
             }
             
-            // Create the purchase
             const purchase = await this.purchaseRepository.create(data);
             
-            // Update the inventory quantity
             await this.inventoryRepository.update(data.inventory_id, {
                 quantity: inventory.quantity + data.quantity
             });
@@ -94,20 +91,17 @@ export class PurchaseService extends BaseService {
 
     async updatePurchase(id: number, data: UpdatePurchase) {
         try {
-            // Get the current purchase to calculate inventory adjustment
             const currentPurchase = await this.purchaseRepository.findById(id);
             if (!currentPurchase) {
                 throw new CustomError("Purchase not found", HttpStatus.NOT_FOUND);
             }
             
-            // Check if quantity is being updated
             if (data.quantity !== undefined && data.quantity !== currentPurchase.quantity) {
                 const inventory = await this.inventoryRepository.findById(currentPurchase.inventory_id);
                 if (!inventory) {
                     throw new CustomError("Associated inventory item not found", HttpStatus.NOT_FOUND);
                 }
                 
-                // Calculate the difference and update the inventory
                 const quantityDifference = data.quantity - currentPurchase.quantity;
                 await this.inventoryRepository.update(currentPurchase.inventory_id, {
                     quantity: inventory.quantity + quantityDifference
@@ -116,7 +110,6 @@ export class PurchaseService extends BaseService {
                 this.logger.info(`Updated inventory ${currentPurchase.inventory_id} quantity by ${quantityDifference}`);
             }
             
-            // Update the purchase
             const purchase = await this.purchaseRepository.update(id, data);
             return this.excludeMetaFields(purchase);
         } catch (error) {
@@ -131,16 +124,13 @@ export class PurchaseService extends BaseService {
 
     async deletePurchase(id: number) {
         try {
-            // Get the purchase to adjust inventory on deletion
             const purchase = await this.purchaseRepository.findById(id);
             if (!purchase) {
                 throw new CustomError("Purchase not found", HttpStatus.NOT_FOUND);
             }
             
-            // Get the inventory to adjust quantity
             const inventory = await this.inventoryRepository.findById(purchase.inventory_id);
             if (inventory) {
-                // Reduce the inventory quantity
                 const newQuantity = Math.max(0, inventory.quantity - purchase.quantity);
                 await this.inventoryRepository.update(purchase.inventory_id, {
                     quantity: newQuantity
@@ -149,7 +139,6 @@ export class PurchaseService extends BaseService {
                 this.logger.info(`Adjusted inventory ${purchase.inventory_id} quantity to ${newQuantity} after purchase deletion`);
             }
             
-            // Soft delete the purchase
             const deleted = await this.purchaseRepository.delete(id);
             if (!deleted) {
                 throw new CustomError("Failed to delete purchase", HttpStatus.INTERNAL_SERVER_ERROR);

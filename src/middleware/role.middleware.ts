@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { CustomError } from "utils";
 
 export const RoleMiddlewareFactory = (roles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, _res: Response, next: NextFunction) => {
         if (!req.user) {
             throw new CustomError("Not authenticated", HttpStatus.UNAUTHORIZED);
         }

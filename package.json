@@ -15,7 +15,7 @@
     "docker:up": "docker-compose --env-file .env.development up",
     "docker:build": "docker-compose --env-file .env.development up --build"
   },
-  "keywords": [],
+  "keywords": ["nsl", "backend", "nodejs", "typescript", "express", "inversify", "dependency injection", "inversion of control", "swagger", "docker", "redis", "bullmq"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

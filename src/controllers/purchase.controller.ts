@@ -53,6 +53,21 @@ export class PurchaseController extends BaseHttpController {
         }
     }
 
+    @httpGet("/invetory/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    public async getPurchaseByInventoryId(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+        try {
+            const id = Number(req.params.id);
+            if (isNaN(id)) {
+                throw new CustomError("Invalid inventory ID", HttpStatus.BAD_REQUEST);
+            }
+            const purchase = await this.purchaseService.getPurchasesByInventoryId(id);
+            return res.status(HttpStatus.OK).json(ApiResponse.success("Purchase retrieved successfully", purchase));
+        } catch (error) {
+            this.logger.error(`Error retrieving purchase with inventory ID ${req.params.id}`);
+            next(error);
+        }
+    }
+
     @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]), ZodValidation(CreateProductDTO))
     public async createPurchase(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {

@@ -10,7 +10,7 @@ export class AuthMiddleware extends BaseMiddleware {
         super();
     }
 
-    handler(req: Request, res: Response, next: NextFunction): void {
+    handler(req: Request, _res: Response, next: NextFunction): void {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             throw new CustomError("Token missing", HttpStatus.UNAUTHORIZED);

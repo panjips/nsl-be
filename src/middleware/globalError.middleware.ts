@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { HttpStatus } from "constant";
 import { ApiResponse, CustomError } from "utils";
 
-function errorHandler(err: any, req: Request, res: Response, next: NextFunction): void {
+function errorHandler(err: any, _req: Request, res: Response, _next: NextFunction): void {
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
         if (err.code === "P2002") {
             const target = err.meta?.target;
