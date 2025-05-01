@@ -75,10 +75,10 @@ export class PurchaseService extends BaseService {
             const purchase = await this.purchaseRepository.create(data);
             
             await this.inventoryRepository.update(data.inventory_id, {
-                quantity: inventory.quantity + data.quantity
+                quantity: inventory.quantity.add(data.quantity)
             });
             
-            this.logger.info(`Updated inventory ${data.inventory_id} quantity to ${inventory.quantity + data.quantity}`);
+            this.logger.info(`Updated inventory ${data.inventory_id} quantity to ${inventory.quantity.add(data.quantity)}`);
             
             return this.excludeMetaFields(purchase);
         } catch (error) {
@@ -102,9 +102,9 @@ export class PurchaseService extends BaseService {
                     throw new CustomError("Associated inventory item not found", HttpStatus.NOT_FOUND);
                 }
                 
-                const quantityDifference = data.quantity - currentPurchase.quantity;
+                const quantityDifference = data.quantity.minus(currentPurchase.quantity);
                 await this.inventoryRepository.update(currentPurchase.inventory_id, {
-                    quantity: inventory.quantity + quantityDifference
+                    quantity: inventory.quantity.add(quantityDifference)
                 });
                 
                 this.logger.info(`Updated inventory ${currentPurchase.inventory_id} quantity by ${quantityDifference}`);
@@ -131,12 +131,11 @@ export class PurchaseService extends BaseService {
             
             const inventory = await this.inventoryRepository.findById(purchase.inventory_id);
             if (inventory) {
-                const newQuantity = Math.max(0, inventory.quantity - purchase.quantity);
                 await this.inventoryRepository.update(purchase.inventory_id, {
-                    quantity: newQuantity
+                    quantity: inventory.quantity.minus(purchase.quantity)
                 });
                 
-                this.logger.info(`Adjusted inventory ${purchase.inventory_id} quantity to ${newQuantity} after purchase deletion`);
+                this.logger.info(`Adjusted inventory ${purchase.inventory_id} quantity to ${inventory.quantity.minus(purchase.quantity)} after purchase deletion`);
             }
             
             const deleted = await this.purchaseRepository.delete(id);

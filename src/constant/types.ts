@@ -21,4 +21,10 @@ export const TYPES = {
     InventoryRepository: Symbol.for("InventoryRepository"),
     PurchaseService: Symbol.for("PurchaseService"),
     PurchaseRepository: Symbol.for("PurchaseRepository"),
+    AddonService: Symbol.for("AddonService"),
+    AddonRepository: Symbol.for("AddonRepository"),
+    AddonRecipeService: Symbol.for("AddonRecipeService"),
+    AddonRecipeRepository: Symbol.for("AddonRecipeRepository"),
+    ProductRecipeService: Symbol.for("ProductRecipeService"),
+    ProductRecipeRepository: Symbol.for("ProductRecipeRepository"),
 };

@@ -4,3 +4,6 @@ export * from "./category.dto";
 export * from "./product.dto";
 export * from "./inventory.dto";
 export * from "./purchase.dto";
+export * from "./addon.dto";
+export * from "./addonRecipe.dto";
+export * from "./productRecipe.dto";

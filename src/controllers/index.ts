@@ -4,3 +4,6 @@ export * from "./category.controller";
 export * from "./product.controller";
 export * from "./inventory.controller";
 export * from "./purchase.controller";
+export * from "./addon.controller";
+export * from "./addonRecipe.controller";
+export * from "./productRecipe.controller";

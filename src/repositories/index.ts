@@ -5,3 +5,6 @@ export * from "./category.repository";
 export * from "./product.repository";
 export * from "./inventory.repository";
 export * from "./purchase.repository";
+export * from "./addon.repository";
+export * from "./addonRecipe.repository";
+export * from "./productRecipe.repository";
