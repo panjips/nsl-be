@@ -7,3 +7,6 @@ export * from "./purchase.dto";
 export * from "./addon.dto";
 export * from "./addonRecipe.dto";
 export * from "./productRecipe.dto";
+export * from "./order.dto";
+export * from "./orderProduct.dto";
+export * from "./orderAddon.dto";

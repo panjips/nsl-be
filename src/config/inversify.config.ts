@@ -8,6 +8,9 @@ import {
     AuthRepository,
     CategoryRepository,
     InventoryRepository,
+    OrderAddonItemRepository,
+    OrderProductItemRepository,
+    OrderRepository,
     ProductRecipeRepository,
     ProductRepository,
     PurchaseRepository,
@@ -49,6 +52,9 @@ container.bind<PurchaseRepository>(TYPES.PurchaseRepository).to(PurchaseReposito
 container.bind<AddonRepository>(TYPES.AddonRepository).to(AddonRepository);
 container.bind<AddonRecipeRepository>(TYPES.AddonRecipeRepository).to(AddonRecipeRepository);
 container.bind<ProductRecipeRepository>(TYPES.ProductRecipeRepository).to(ProductRecipeRepository);
+container.bind<OrderRepository>(TYPES.OrderRepository).to(OrderRepository);
+container.bind<OrderProductItemRepository>(TYPES.OrderProductItemRepository).to(OrderProductItemRepository);
+container.bind<OrderAddonItemRepository>(TYPES.OrderAddonItemRepository).to(OrderAddonItemRepository);
 
 container.bind<AuthService>(TYPES.AuthService).to(AuthService);
 container.bind<UserService>(TYPES.UserService).to(UserService);
@@ -59,5 +65,8 @@ container.bind<PurchaseService>(TYPES.PurchaseService).to(PurchaseService);
 container.bind<AddonService>(TYPES.AddonService).to(AddonService);
 container.bind<AddonRecipeService>(TYPES.AddonRecipeService).to(AddonRecipeService);
 container.bind<ProductRecipeService>(TYPES.ProductRecipeService).to(ProductRecipeService);
+container.bind<OrderProductItemRepository>(TYPES.OrderProductItemRepository).to(OrderProductItemRepository);
+container.bind<OrderAddonItemRepository>(TYPES.OrderAddonItemRepository).to(OrderAddonItemRepository);
+container.bind<OrderRepository>(TYPES.OrderRepository).to(OrderRepository);
 
 export { container };

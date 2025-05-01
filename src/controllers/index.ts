@@ -7,3 +7,6 @@ export * from "./purchase.controller";
 export * from "./addon.controller";
 export * from "./addonRecipe.controller";
 export * from "./productRecipe.controller";
+export * from "./order.controller";
+export * from "./orderProduct.controller";
+export * from "./orderAddon.controller";

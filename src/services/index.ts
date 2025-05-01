@@ -8,3 +8,6 @@ export * from "./base.service";
 export * from "./addon.service";
 export * from "./addonRecipe.service";
 export * from "./productRecipe.service";
+export * from "./order.service";
+export * from "./orderProduct.service";
+export * from "./orderAddon.service";

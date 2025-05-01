@@ -8,3 +8,6 @@ export * from "./purchase.model";
 export * from "./addon.model";
 export * from "./addonRecipe.model";
 export * from "./productRecipe.model";
+export * from "./order.model";
+export * from "./orderAddon.model";
+export * from "./orderProduct.model";

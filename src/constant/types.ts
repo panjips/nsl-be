@@ -27,4 +27,10 @@ export const TYPES = {
     AddonRecipeRepository: Symbol.for("AddonRecipeRepository"),
     ProductRecipeService: Symbol.for("ProductRecipeService"),
     ProductRecipeRepository: Symbol.for("ProductRecipeRepository"),
+    OrderService: Symbol.for("OrderService"),
+    OrderRepository: Symbol.for("OrderRepository"),
+    OrderProductItemService: Symbol.for("OrderProductItemService"),
+    OrderProductItemRepository: Symbol.for("OrderProductItemRepository"),
+    OrderAddonItemService: Symbol.for("OrderAddonItemService"),
+    OrderAddonItemRepository: Symbol.for("OrderAddonItemRepository"),
 };

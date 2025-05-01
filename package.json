@@ -15,7 +15,20 @@
     "docker:up": "docker-compose --env-file .env.development up",
     "docker:build": "docker-compose --env-file .env.development up --build"
   },
-  "keywords": ["nsl", "backend", "nodejs", "typescript", "express", "inversify", "dependency injection", "inversion of control", "swagger", "docker", "redis", "bullmq"],
+  "keywords": [
+    "nsl",
+    "backend",
+    "nodejs",
+    "typescript",
+    "express",
+    "inversify",
+    "dependency injection",
+    "inversion of control",
+    "swagger",
+    "docker",
+    "redis",
+    "bullmq"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -46,6 +59,7 @@
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.2",
+    "nanoid": "^5.1.5",
     "nodemailer": "^6.10.1",
     "reflect-metadata": "^0.2.2",
     "swagger-themes": "^1.4.3",

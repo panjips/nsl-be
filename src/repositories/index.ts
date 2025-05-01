@@ -8,3 +8,6 @@ export * from "./purchase.repository";
 export * from "./addon.repository";
 export * from "./addonRecipe.repository";
 export * from "./productRecipe.repository";
+export * from "./order.repository";
+export * from "./orderProduct.repository";
+export * from "./orderAddon.repository";
