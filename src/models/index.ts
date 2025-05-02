@@ -11,3 +11,4 @@ export * from "./productRecipe.model";
 export * from "./order.model";
 export * from "./orderAddon.model";
 export * from "./orderProduct.model";
+export * from "./payment.model";

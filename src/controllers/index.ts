@@ -10,3 +10,4 @@ export * from "./productRecipe.controller";
 export * from "./order.controller";
 export * from "./orderProduct.controller";
 export * from "./orderAddon.controller";
+export * from "./payment.controller";

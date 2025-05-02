@@ -33,4 +33,6 @@ export const TYPES = {
     OrderProductItemRepository: Symbol.for("OrderProductItemRepository"),
     OrderAddonItemService: Symbol.for("OrderAddonItemService"),
     OrderAddonItemRepository: Symbol.for("OrderAddonItemRepository"),
+    PaymentRepository: Symbol.for("PaymentRepository"),
+    PaymentService: Symbol.for("PaymentService"),
 };

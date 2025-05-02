@@ -54,7 +54,11 @@ export class PurchaseController extends BaseHttpController {
     }
 
     @httpGet("/invetory/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
-    public async getPurchaseByInventoryId(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+    public async getPurchaseByInventoryId(
+        @request() req: Request,
+        @response() res: Response,
+        @next() next: NextFunction,
+    ) {
         try {
             const id = Number(req.params.id);
             if (isNaN(id)) {

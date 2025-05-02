@@ -73,7 +73,9 @@ export class ProductRecipeRepository {
             },
         });
 
-        this.logger.info(`ProductRecipe created with ID ${data.id} for product ${productRecipe.product_id} and inventory ${productRecipe.inventory_id}`);
+        this.logger.info(
+            `ProductRecipe created with ID ${data.id} for product ${productRecipe.product_id} and inventory ${productRecipe.inventory_id}`,
+        );
         return data;
     }
 

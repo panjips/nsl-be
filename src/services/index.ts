@@ -11,3 +11,4 @@ export * from "./productRecipe.service";
 export * from "./order.service";
 export * from "./orderProduct.service";
 export * from "./orderAddon.service";
+export * from "./payment.service";

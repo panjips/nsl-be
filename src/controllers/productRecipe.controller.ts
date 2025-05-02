@@ -30,7 +30,9 @@ export class ProductRecipeController extends BaseHttpController {
     public async getAllProductRecipes(@response() res: Response, @next() next: NextFunction) {
         try {
             const productRecipes = await this.productRecipeService.getAllProductRecipes();
-            return res.status(HttpStatus.OK).json(ApiResponse.success("Product recipes retrieved successfully", productRecipes));
+            return res
+                .status(HttpStatus.OK)
+                .json(ApiResponse.success("Product recipes retrieved successfully", productRecipes));
         } catch (error) {
             this.logger.error("Error retrieving product recipes");
             next(error);
@@ -47,7 +49,9 @@ export class ProductRecipeController extends BaseHttpController {
             }
 
             const productRecipe = await this.productRecipeService.getProductRecipeById(id);
-            return res.status(HttpStatus.OK).json(ApiResponse.success("Product recipe retrieved successfully", productRecipe));
+            return res
+                .status(HttpStatus.OK)
+                .json(ApiResponse.success("Product recipe retrieved successfully", productRecipe));
         } catch (error) {
             this.logger.error(`Error retrieving product recipe with ID ${req.params.id}`);
             next(error);
@@ -55,7 +59,11 @@ export class ProductRecipeController extends BaseHttpController {
     }
 
     @httpGet("/product/:productId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
-    public async getProductRecipesByProductId(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+    public async getProductRecipesByProductId(
+        @request() req: Request,
+        @response() res: Response,
+        @next() next: NextFunction,
+    ) {
         try {
             const productId = Number(req.params.productId);
 
@@ -64,9 +72,9 @@ export class ProductRecipeController extends BaseHttpController {
             }
 
             const productRecipes = await this.productRecipeService.getProductRecipesByProductId(productId);
-            return res.status(HttpStatus.OK).json(
-                ApiResponse.success(`Recipes for product ${productId} retrieved successfully`, productRecipes)
-            );
+            return res
+                .status(HttpStatus.OK)
+                .json(ApiResponse.success(`Recipes for product ${productId} retrieved successfully`, productRecipes));
         } catch (error) {
             this.logger.error(`Error retrieving recipes for product ID ${req.params.productId}`);
             next(error);
@@ -74,7 +82,11 @@ export class ProductRecipeController extends BaseHttpController {
     }
 
     @httpGet("/inventory/:inventoryId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
-    public async getProductRecipesByInventoryId(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+    public async getProductRecipesByInventoryId(
+        @request() req: Request,
+        @response() res: Response,
+        @next() next: NextFunction,
+    ) {
         try {
             const inventoryId = Number(req.params.inventoryId);
 
@@ -83,9 +95,14 @@ export class ProductRecipeController extends BaseHttpController {
             }
 
             const productRecipes = await this.productRecipeService.getProductRecipesByInventoryId(inventoryId);
-            return res.status(HttpStatus.OK).json(
-                ApiResponse.success(`Product recipes using inventory ${inventoryId} retrieved successfully`, productRecipes)
-            );
+            return res
+                .status(HttpStatus.OK)
+                .json(
+                    ApiResponse.success(
+                        `Product recipes using inventory ${inventoryId} retrieved successfully`,
+                        productRecipes,
+                    ),
+                );
         } catch (error) {
             this.logger.error(`Error retrieving product recipes for inventory ID ${req.params.inventoryId}`);
             next(error);
@@ -96,9 +113,13 @@ export class ProductRecipeController extends BaseHttpController {
     public async createProductRecipe(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const productRecipe = await this.productRecipeService.createProductRecipe(req.body);
-            return res.status(HttpStatus.CREATED).json(ApiResponse.success("Product recipe created successfully", productRecipe));
+            return res
+                .status(HttpStatus.CREATED)
+                .json(ApiResponse.success("Product recipe created successfully", productRecipe));
         } catch (error) {
-            this.logger.error(`Error creating product recipe: ${error instanceof Error ? error.message : String(error)}`);
+            this.logger.error(
+                `Error creating product recipe: ${error instanceof Error ? error.message : String(error)}`,
+            );
             next(error);
         }
     }
@@ -113,7 +134,9 @@ export class ProductRecipeController extends BaseHttpController {
             }
 
             const productRecipe = await this.productRecipeService.updateProductRecipe(id, req.body);
-            return res.status(HttpStatus.OK).json(ApiResponse.success("Product recipe updated successfully", productRecipe));
+            return res
+                .status(HttpStatus.OK)
+                .json(ApiResponse.success("Product recipe updated successfully", productRecipe));
         } catch (error) {
             this.logger.error(`Error updating product recipe with ID ${req.params.id}`);
             next(error);
@@ -138,7 +161,11 @@ export class ProductRecipeController extends BaseHttpController {
     }
 
     @httpDelete("/product/:productId", RoleMiddlewareFactory([Role.PEMILIK]))
-    public async deleteProductRecipesByProductId(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+    public async deleteProductRecipesByProductId(
+        @request() req: Request,
+        @response() res: Response,
+        @next() next: NextFunction,
+    ) {
         try {
             const productId = Number(req.params.productId);
 
@@ -147,9 +174,13 @@ export class ProductRecipeController extends BaseHttpController {
             }
 
             const result = await this.productRecipeService.deleteProductRecipesByProductId(productId);
-            return res.status(HttpStatus.OK).json(
-                ApiResponse.success(`${result.count} product recipes deleted successfully for product ID ${productId}`)
-            );
+            return res
+                .status(HttpStatus.OK)
+                .json(
+                    ApiResponse.success(
+                        `${result.count} product recipes deleted successfully for product ID ${productId}`,
+                    ),
+                );
         } catch (error) {
             this.logger.error(`Error deleting product recipes for product ID ${req.params.productId}`);
             next(error);

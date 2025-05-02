@@ -21,6 +21,13 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum PaymentType {
+  GOPAY
+  SHOPEEPAY
+  QRIS
+  CASH
+}
+
 model Role {
   id         Int      @id @default(autoincrement())
   name       String   @db.VarChar(255)
@@ -197,6 +204,7 @@ model Order {
 
   user          User               @relation(fields: [user_id], references: [id])
   items         OrderProductItem[]
+  payments      Payment[]
 }
 
 model OrderProductItem {
@@ -227,4 +235,20 @@ model OrderAddonItem {
 
   order_product_item    OrderProductItem @relation(fields: [order_product_item_id], references: [id])
   addon                 Addon            @relation(fields: [addon_id], references: [id])
+}
+
+model Payment {
+  id              Int          @id @default(autoincrement())
+  order_id        Int
+  payment_trx_id  String?
+  payment_type    PaymentType
+  trx_status      String?
+  trx_time        DateTime?
+  paid_amount     Decimal      @db.Decimal(10, 2)
+  is_active       Boolean      @default(true)
+  create_at       DateTime     @default(now())
+  update_at       DateTime     @updatedAt
+  delete_at       DateTime?
+  
+  order           Order        @relation(fields: [order_id], references: [id])
 }

@@ -19,9 +19,7 @@ export class AddonService extends BaseService {
             const addons = await this.addonRepository.findAll();
             return this.excludeMetaFields(addons);
         } catch (error) {
-            this.logger.error(
-                `Error getting all addons: ${error instanceof Error ? error.message : String(error)}`,
-            );
+            this.logger.error(`Error getting all addons: ${error instanceof Error ? error.message : String(error)}`);
             throw new CustomError("Failed to retrieve addons", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -67,9 +65,7 @@ export class AddonService extends BaseService {
         } catch (error) {
             if (error instanceof CustomError) throw error;
 
-            this.logger.error(
-                `Error updating addon ${id}: ${error instanceof Error ? error.message : String(error)}`,
-            );
+            this.logger.error(`Error updating addon ${id}: ${error instanceof Error ? error.message : String(error)}`);
             throw new CustomError("Failed to update addon", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -86,9 +82,7 @@ export class AddonService extends BaseService {
         } catch (error) {
             if (error instanceof CustomError) throw error;
 
-            this.logger.error(
-                `Error deleting addon ${id}: ${error instanceof Error ? error.message : String(error)}`,
-            );
+            this.logger.error(`Error deleting addon ${id}: ${error instanceof Error ? error.message : String(error)}`);
             throw new CustomError("Failed to delete addon", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

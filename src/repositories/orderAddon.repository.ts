@@ -84,7 +84,9 @@ export class OrderAddonItemRepository {
             },
         });
 
-        this.logger.info(`Order addon item created with ID ${data.id} for order product item ${orderAddonItem.order_product_item_id}`);
+        this.logger.info(
+            `Order addon item created with ID ${data.id} for order product item ${orderAddonItem.order_product_item_id}`,
+        );
         return data;
     }
 
@@ -147,7 +149,9 @@ export class OrderAddonItemRepository {
             },
         });
 
-        this.logger.info(`${result.count} order addon items for order product item ID ${orderProductItemId} soft deleted`);
+        this.logger.info(
+            `${result.count} order addon items for order product item ID ${orderProductItemId} soft deleted`,
+        );
         return result.count;
     }
 
@@ -168,7 +172,7 @@ export class OrderAddonItemRepository {
             LIMIT ${limit}
         `;
 
-        return topAddons.map(item => ({
+        return topAddons.map((item) => ({
             addon_id: item.addon_id,
             addon_name: item.addon_name,
             count: Number(item.count),

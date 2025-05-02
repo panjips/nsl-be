@@ -62,7 +62,9 @@ export class InventoryService extends BaseService {
             const inventory = await this.inventoryRepository.create(data);
             return this.excludeMetaFields(inventory);
         } catch (error) {
-            this.logger.error(`Error creating inventory item: ${error instanceof Error ? error.message : String(error)}`);
+            this.logger.error(
+                `Error creating inventory item: ${error instanceof Error ? error.message : String(error)}`,
+            );
             throw new CustomError("Failed to create inventory item", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

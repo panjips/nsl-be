@@ -10,3 +10,4 @@ export * from "./productRecipe.dto";
 export * from "./order.dto";
 export * from "./orderProduct.dto";
 export * from "./orderAddon.dto";
+export * from "./payment.dto";

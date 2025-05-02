@@ -73,7 +73,9 @@ export class AddonRecipeRepository {
             },
         });
 
-        this.logger.info(`AddonRecipe created with ID ${data.id} for addon ${addonRecipe.addon_id} and inventory ${addonRecipe.inventory_id}`);
+        this.logger.info(
+            `AddonRecipe created with ID ${data.id} for addon ${addonRecipe.addon_id} and inventory ${addonRecipe.inventory_id}`,
+        );
         return data;
     }
 

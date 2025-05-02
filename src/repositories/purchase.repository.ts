@@ -20,7 +20,7 @@ export class PurchaseRepository {
                 inventory: true,
             },
             orderBy: {
-                purchase_date: 'desc',
+                purchase_date: "desc",
             },
         });
     }
@@ -47,7 +47,7 @@ export class PurchaseRepository {
                 inventory: true,
             },
             orderBy: {
-                purchase_date: 'desc',
+                purchase_date: "desc",
             },
         });
     }
@@ -62,7 +62,9 @@ export class PurchaseRepository {
             },
         });
 
-        this.logger.info(`Purchase for inventory ID ${purchase.inventory_id} inserted to the database with ID ${data.id}`);
+        this.logger.info(
+            `Purchase for inventory ID ${purchase.inventory_id} inserted to the database with ID ${data.id}`,
+        );
         return data;
     }
 

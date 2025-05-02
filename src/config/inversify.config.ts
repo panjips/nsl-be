@@ -11,6 +11,7 @@ import {
     OrderAddonItemRepository,
     OrderProductItemRepository,
     OrderRepository,
+    PaymentRepository,
     ProductRecipeRepository,
     ProductRepository,
     PurchaseRepository,
@@ -27,6 +28,10 @@ import {
     AddonService,
     AddonRecipeService,
     ProductRecipeService,
+    OrderProductItemService,
+    OrderAddonItemService,
+    OrderService,
+    PaymentService,
 } from "services";
 import { ILogger, LoggerService, prisma, JwtService, MailService, RedisService, R2Service, QueueService } from "utils";
 import { AuthMiddleware } from "middleware";
@@ -55,6 +60,7 @@ container.bind<ProductRecipeRepository>(TYPES.ProductRecipeRepository).to(Produc
 container.bind<OrderRepository>(TYPES.OrderRepository).to(OrderRepository);
 container.bind<OrderProductItemRepository>(TYPES.OrderProductItemRepository).to(OrderProductItemRepository);
 container.bind<OrderAddonItemRepository>(TYPES.OrderAddonItemRepository).to(OrderAddonItemRepository);
+container.bind<PaymentRepository>(TYPES.PaymentRepository).to(PaymentRepository);
 
 container.bind<AuthService>(TYPES.AuthService).to(AuthService);
 container.bind<UserService>(TYPES.UserService).to(UserService);
@@ -65,8 +71,9 @@ container.bind<PurchaseService>(TYPES.PurchaseService).to(PurchaseService);
 container.bind<AddonService>(TYPES.AddonService).to(AddonService);
 container.bind<AddonRecipeService>(TYPES.AddonRecipeService).to(AddonRecipeService);
 container.bind<ProductRecipeService>(TYPES.ProductRecipeService).to(ProductRecipeService);
-container.bind<OrderProductItemRepository>(TYPES.OrderProductItemRepository).to(OrderProductItemRepository);
-container.bind<OrderAddonItemRepository>(TYPES.OrderAddonItemRepository).to(OrderAddonItemRepository);
-container.bind<OrderRepository>(TYPES.OrderRepository).to(OrderRepository);
+container.bind<OrderProductItemService>(TYPES.OrderProductItemService).to(OrderProductItemService);
+container.bind<OrderAddonItemService>(TYPES.OrderAddonItemService).to(OrderAddonItemService);
+container.bind<OrderService>(TYPES.OrderService).to(OrderService);
+container.bind<PaymentService>(TYPES.PaymentService).to(PaymentService);
 
 export { container };

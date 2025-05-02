@@ -11,3 +11,4 @@ export * from "./productRecipe.repository";
 export * from "./order.repository";
 export * from "./orderProduct.repository";
 export * from "./orderAddon.repository";
+export * from "./payment.repository";
