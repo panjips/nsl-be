@@ -4,7 +4,8 @@ import express from "express";
 import { container, config } from "config";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "middleware";
-import { ILogger } from "utils";
+import { Server as HttpServer } from "node:http";
+import { ILogger, SocketService } from "utils";
 import { TYPES } from "constant";
 import { swagger } from "docs";
 
@@ -22,7 +23,13 @@ server.setErrorConfig((app) => {
 });
 
 const logger = container.get<ILogger>(TYPES.Logger);
+const socket = container.get<SocketService>(TYPES.SocketService);
+
 const app = server.build();
+
+const httpServer = new HttpServer(app);
+socket.initialize(httpServer);
+
 app.listen(config.port, () => {
     logger.info(`Server is running on port ${config.port}`);
     logger.info(`Environment: ${config.env}`);

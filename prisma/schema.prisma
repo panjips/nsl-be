@@ -246,9 +246,9 @@ model Payment {
   trx_time        DateTime?
   paid_amount     Decimal      @db.Decimal(10, 2)
   is_active       Boolean      @default(true)
-  create_at       DateTime     @default(now())
-  update_at       DateTime     @updatedAt
-  delete_at       DateTime?
-  
+  created_at            DateTime         @default(now())
+  updated_at            DateTime         @updatedAt
+  deleted_at            DateTime?
+
   order           Order        @relation(fields: [order_id], references: [id])
 }
