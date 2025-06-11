@@ -3,8 +3,9 @@ import { OrderType, OrderStatus } from "@prisma/client";
 import { CreateOrderProductItemDTO } from "./orderProduct.dto";
 
 export const CreateOrderDTO = z.object({
-    user_id: z.number().int().positive("User ID is required"),
+    user_id: z.number().int().positive("User ID is required").optional(),
     order_type: z.nativeEnum(OrderType).default("OFFLINE"),
+    payment_type: z.string().min(1, "Payment type is required"),
     notes: z.string().optional(),
     items: z.array(CreateOrderProductItemDTO).nonempty("At least one product item is required"),
 });

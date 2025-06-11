@@ -7,14 +7,18 @@ import {
     AddonRepository,
     AuthRepository,
     CategoryRepository,
+    CateringPackageRepository,
     InventoryRepository,
+    InventoryUsageRepository,
     OrderAddonItemRepository,
+    OrderCateringRepository,
     OrderProductItemRepository,
     OrderRepository,
     PaymentRepository,
     ProductRecipeRepository,
     ProductRepository,
     PurchaseRepository,
+    ReservationRepository,
     RoleRepository,
     UserRepository,
 } from "repositories";
@@ -32,6 +36,9 @@ import {
     OrderAddonItemService,
     OrderService,
     PaymentService,
+    CateringPackageService,
+    ReservationService,
+    InventoryUsageService,
 } from "services";
 import {
     ILogger,
@@ -43,6 +50,7 @@ import {
     R2Service,
     QueueService,
     SocketService,
+    MidtransService
 } from "utils";
 import { AuthMiddleware } from "middleware";
 
@@ -57,6 +65,7 @@ container.bind<RedisService>(TYPES.RedisService).to(RedisService).inSingletonSco
 container.bind<R2Service>(TYPES.R2Service).to(R2Service).inSingletonScope();
 container.bind<QueueService>(TYPES.QueueService).to(QueueService).inSingletonScope();
 container.bind<SocketService>(TYPES.SocketService).to(SocketService).inSingletonScope();
+container.bind<MidtransService>(TYPES.MidtransService).to(MidtransService).inSingletonScope();
 
 container.bind<AuthRepository>(TYPES.AuthRepository).to(AuthRepository);
 container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository);
@@ -72,6 +81,10 @@ container.bind<OrderRepository>(TYPES.OrderRepository).to(OrderRepository);
 container.bind<OrderProductItemRepository>(TYPES.OrderProductItemRepository).to(OrderProductItemRepository);
 container.bind<OrderAddonItemRepository>(TYPES.OrderAddonItemRepository).to(OrderAddonItemRepository);
 container.bind<PaymentRepository>(TYPES.PaymentRepository).to(PaymentRepository);
+container.bind<CateringPackageRepository>(TYPES.CateringPackageRepository).to(CateringPackageRepository);
+container.bind<ReservationRepository>(TYPES.ReservationRepository).to(ReservationRepository);
+container.bind<OrderCateringRepository>(TYPES.OrderCateringRepository).to(OrderCateringRepository);
+container.bind<InventoryUsageRepository>(TYPES.InventoryUsageRepository).to(InventoryUsageRepository);
 
 container.bind<AuthService>(TYPES.AuthService).to(AuthService);
 container.bind<UserService>(TYPES.UserService).to(UserService);
@@ -86,5 +99,8 @@ container.bind<OrderProductItemService>(TYPES.OrderProductItemService).to(OrderP
 container.bind<OrderAddonItemService>(TYPES.OrderAddonItemService).to(OrderAddonItemService);
 container.bind<OrderService>(TYPES.OrderService).to(OrderService);
 container.bind<PaymentService>(TYPES.PaymentService).to(PaymentService);
+container.bind<CateringPackageService>(TYPES.CateringPackageService).to(CateringPackageService);
+container.bind<ReservationService>(TYPES.ReservationService).to(ReservationService);
+container.bind<InventoryUsageService>(TYPES.InventoryUsageService).to(InventoryUsageService);
 
 export { container };

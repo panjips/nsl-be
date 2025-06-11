@@ -28,7 +28,8 @@
                 "noInferrableTypes": "off",
                 "useTemplate": "off",
                 "noUselessElse": "off",
-                "useImportType": "off"
+                "useImportType": "off",
+                "useConst": "off"
             },
             "correctness": {
                 "noInvalidUseBeforeDeclaration": "off"

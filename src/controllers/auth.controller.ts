@@ -36,31 +36,35 @@ export class AuthController extends BaseHttpController {
             const { password, identifier } = req.body;
             const data = await this.authService.login(password, identifier);
 
-            const accessToken = this.jwtService.signAccessToken({
+            const userData = {
                 id: data.id,
+                name: data.name,
                 role: data.role.name,
                 username: data.username,
                 email: data.email,
                 phone_number: data.phone_number,
-            });
+            };
+            const accessToken = this.jwtService.signAccessToken(userData);
 
             const refreshToken = this.jwtService.signRefreshToken({
                 id: data.id,
             });
             await this.authService.storeRefreshToken(data.id, refreshToken);
 
-            console.log(refreshToken);
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
                 secure: true,
-                sameSite: "strict",
-                path: "/auth",
+                sameSite: "none",
+                path: "/",
             });
 
             this.logger.info("User logged in successfully");
-            return res
-                .status(HttpStatus.OK)
-                .json(ApiResponse.success("User logged in successfully", { token: accessToken }));
+            return res.status(HttpStatus.OK).json(
+                ApiResponse.success("User logged in successfully", {
+                    user: userData,
+                    token: accessToken,
+                }),
+            );
         } catch (error) {
             this.logger.error("User login error");
             next(error);
@@ -88,9 +92,11 @@ export class AuthController extends BaseHttpController {
             });
 
             this.logger.info("Token refreshed successfully");
-            return res
-                .status(HttpStatus.OK)
-                .json(ApiResponse.success("Token refreshed successfully", { token: accessToken }));
+            return res.status(HttpStatus.OK).json(
+                ApiResponse.success("Token refreshed successfully", {
+                    token: accessToken,
+                }),
+            );
         } catch (error) {
             this.logger.error("Token refresh error");
             return next(error);

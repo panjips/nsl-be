@@ -14,7 +14,6 @@ const UpdateUserDTO = z.object({
     name: z.string().optional(),
     email: z.string().email().optional(),
     username: z.string().optional(),
-    password: z.string().min(8).optional(),
     role: z.enum([Role.KASIR, Role.PELANGGAN, Role.STAF]).optional(),
     phone_number: z.string().min(10).optional(),
     is_active: z.boolean().optional(),

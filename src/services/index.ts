@@ -12,3 +12,6 @@ export * from "./order.service";
 export * from "./orderProduct.service";
 export * from "./orderAddon.service";
 export * from "./payment.service";
+export * from "./cateringPackage.service";
+export * from "./reservation.service";
+export * from "./inventoryUsage.service";

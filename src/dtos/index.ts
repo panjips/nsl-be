@@ -11,3 +11,5 @@ export * from "./order.dto";
 export * from "./orderProduct.dto";
 export * from "./orderAddon.dto";
 export * from "./payment.dto";
+export * from "./cateringPackage.dto";
+export * from "./reservation.dto";

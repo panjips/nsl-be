@@ -12,3 +12,7 @@ export * from "./order.model";
 export * from "./orderAddon.model";
 export * from "./orderProduct.model";
 export * from "./payment.model";
+export * from "./cateringPackage.model";
+export * from "./reservation.model";
+export * from "./orderCatering.model";
+export * from "./inventoryUsage.model";

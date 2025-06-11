@@ -12,3 +12,7 @@ export * from "./order.repository";
 export * from "./orderProduct.repository";
 export * from "./orderAddon.repository";
 export * from "./payment.repository";
+export * from "./cateringPackage.repository";
+export * from "./reservation.repository";
+export * from "./orderCatering.repository";
+export * from "./inventoryUsage.repository";

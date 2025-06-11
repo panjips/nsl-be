@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { TYPES } from "constant";
+import { Role, TYPES } from "constant";
 import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { ILogger } from "utils";
@@ -12,18 +12,35 @@ export class UserRepository {
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {}
 
-    async getAllUsers() {
+    async getAllUsers(type?: string) {
         try {
+            const whereClause: any = {
+                is_active: true,
+            };
+
+            if (type === 'employee') {
+                whereClause.role = {
+                    name: {
+                        not: Role.PELANGGAN
+                    }
+                };
+            } else if (type === 'customer') {
+                whereClause.role = {
+                    name: Role.PELANGGAN
+                };
+            }
+
             const users = await this.prisma.user.findMany({
-                where: {
-                    is_active: true,
-                },
+                where: whereClause,
                 include: {
                     role: true,
                 },
+                orderBy: {
+                    id: 'asc',
+                },
             });
 
-            this.logger.info("Fetched all users successfully");
+            this.logger.info(`Fetched all users successfully with type filter: ${type || 'none'}`);
             return users;
         } catch (error) {
             if (error instanceof PrismaClientKnownRequestError) {
@@ -85,6 +102,7 @@ export class UserRepository {
             },
             data: {
                 is_active: false,
+                deleted_at: new Date(),
             },
         });
 

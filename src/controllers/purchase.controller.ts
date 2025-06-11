@@ -15,7 +15,7 @@ import type { NextFunction, Request, Response } from "express";
 import { ApiResponse, CustomError, ILogger } from "utils";
 import { PurchaseService } from "services";
 import { RoleMiddlewareFactory, ZodValidation } from "middleware";
-import { CreateProductDTO, UpdatePurchaseDTO } from "dtos";
+import { CreatePurchaseDTO, UpdatePurchaseDTO } from "dtos";
 
 @controller("/purchase", TYPES.AuthMiddleware)
 export class PurchaseController extends BaseHttpController {
@@ -72,7 +72,7 @@ export class PurchaseController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]), ZodValidation(CreateProductDTO))
+    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]), ZodValidation(CreatePurchaseDTO))
     public async createPurchase(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const purchase = await this.purchaseService.createPurchase(req.body);

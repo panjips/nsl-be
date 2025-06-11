@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
 import type { AddonRecipe, PrismaClient } from "@prisma/client";
 import { ILogger } from "utils";
-import { CreateAddonRecipe, UpdateAddonRecipe } from "models";
+import { AddonWithRecipe, CreateAddonRecipe, UpdateAddonRecipe } from "models";
 
 @injectable()
 export class AddonRecipeRepository {
@@ -11,14 +11,22 @@ export class AddonRecipeRepository {
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {}
 
-    async findAll(): Promise<AddonRecipe[]> {
-        return await this.prisma.addonRecipe.findMany({
+    async findAll(): Promise<AddonWithRecipe[]> {
+        return await this.prisma.addon.findMany({
             where: {
                 is_active: true,
+                recipes: {
+                    some: {
+                        is_active: true,
+                    },
+                },
             },
             include: {
-                addon: true,
-                inventory: true,
+                recipes: {
+                    where: {
+                        is_active: true,
+                    },
+                },
             },
         });
     }
@@ -36,15 +44,23 @@ export class AddonRecipeRepository {
         });
     }
 
-    async findByAddonId(addonId: number): Promise<AddonRecipe[]> {
-        return await this.prisma.addonRecipe.findMany({
+    async findByAddonId(addonId: number): Promise<AddonWithRecipe | null> {
+        return await this.prisma.addon.findFirst({
             where: {
-                addon_id: addonId,
+                id: addonId,
                 is_active: true,
+                recipes: {
+                    some: {
+                        is_active: true,
+                    },
+                },
             },
             include: {
-                addon: true,
-                inventory: true,
+                recipes: {
+                    where: {
+                        is_active: true,
+                    },
+                },
             },
         });
     }
@@ -77,6 +93,19 @@ export class AddonRecipeRepository {
             `AddonRecipe created with ID ${data.id} for addon ${addonRecipe.addon_id} and inventory ${addonRecipe.inventory_id}`,
         );
         return data;
+    }
+
+    async createMany(addonId: number, recipes: { inventory_id: number; quantity_used: number }[]): Promise<number> {
+        const createdRecipes = await this.prisma.addonRecipe.createMany({
+            data: recipes.map((recipe) => ({
+                addon_id: addonId,
+                inventory_id: recipe.inventory_id,
+                quantity_used: recipe.quantity_used,
+            })),
+        });
+
+        this.logger.info(`Created ${createdRecipes.count} recipes for addon ${addonId}`);
+        return createdRecipes.count;
     }
 
     async update(id: number, addonRecipe: UpdateAddonRecipe): Promise<AddonRecipe | null> {

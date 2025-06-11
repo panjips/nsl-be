@@ -109,6 +109,46 @@ export class ProductRecipeService extends BaseService {
         }
     }
 
+    // Add this method to the existing service class
+
+    async bulkCreateProductRecipes(data: {
+        product_id: number;
+        recipes: { inventory_id: number; quantity_used: number }[];
+    }) {
+        try {
+            const product = await this.productRepository.findById(data.product_id);
+            if (!product) {
+                throw new CustomError("Product not found", HttpStatus.NOT_FOUND);
+            }
+
+            const inventoryIds = new Set(data.recipes.map((recipe) => recipe.inventory_id));
+            for (const inventoryId of inventoryIds) {
+                const inventory = await this.inventoryRepository.findById(inventoryId);
+                if (!inventory) {
+                    throw new CustomError(`Inventory item with ID ${inventoryId} not found`, HttpStatus.NOT_FOUND);
+                }
+            }
+
+            await this.productRecipeRepository.deleteByProductId(data.product_id);
+
+            await this.productRecipeRepository.createMany(data.product_id, data.recipes);
+
+            const productWithRecipes = await this.productRecipeRepository.findByProductId(data.product_id);
+            if (!productWithRecipes) {
+                throw new CustomError("No recipes found for the product", HttpStatus.NOT_FOUND);
+            }
+
+            return this.excludeMetaFields(productWithRecipes);
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+
+            this.logger.error(
+                `Error bulk creating product recipes: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to create product recipes", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     async updateProductRecipe(id: number, data: UpdateProductRecipe) {
         try {
             const existingRecipe = await this.productRecipeRepository.findById(id);

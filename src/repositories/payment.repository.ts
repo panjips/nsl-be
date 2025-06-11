@@ -20,7 +20,6 @@ export class PaymentRepository {
                 order: {
                     select: {
                         id: true,
-                        order_trx_id: true,
                         order_status: true,
                         total_amount: true,
                         user: {
@@ -34,7 +33,7 @@ export class PaymentRepository {
                 },
             },
             orderBy: {
-                create_at: "desc",
+                created_at: "desc",
             },
         });
     }
@@ -49,7 +48,6 @@ export class PaymentRepository {
                 order: {
                     select: {
                         id: true,
-                        order_trx_id: true,
                         order_status: true,
                         total_amount: true,
                         user: {
@@ -75,33 +73,13 @@ export class PaymentRepository {
                 order: {
                     select: {
                         id: true,
-                        order_trx_id: true,
                         order_status: true,
                         total_amount: true,
                     },
                 },
             },
             orderBy: {
-                create_at: "desc",
-            },
-        });
-    }
-
-    async findByTransactionId(paymentTrxId: string): Promise<Payment | null> {
-        return await this.prisma.payment.findFirst({
-            where: {
-                payment_trx_id: paymentTrxId,
-                is_active: true,
-            },
-            include: {
-                order: {
-                    select: {
-                        id: true,
-                        order_trx_id: true,
-                        order_status: true,
-                        total_amount: true,
-                    },
-                },
+                created_at: "desc",
             },
         });
     }
@@ -127,7 +105,7 @@ export class PaymentRepository {
             },
             data: {
                 ...payment,
-                update_at: new Date(),
+                updated_at: new Date(),
             },
             include: {
                 order: true,
@@ -145,7 +123,7 @@ export class PaymentRepository {
             },
             data: {
                 is_active: false,
-                delete_at: new Date(),
+                deleted_at: new Date(),
             },
         });
 

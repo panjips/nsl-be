@@ -107,6 +107,41 @@ export class AddonRecipeService extends BaseService {
         }
     }
 
+    async bulkCreateAddonRecipes(data: {
+        addon_id: number;
+        recipes: { inventory_id: number; quantity_used: number }[];
+    }) {
+        try {
+            const addon = await this.addonRepository.findById(data.addon_id);
+            if (!addon) {
+                throw new CustomError("Addon not found", HttpStatus.NOT_FOUND);
+            }
+
+            const inventoryIds = new Set(data.recipes.map((recipe) => recipe.inventory_id));
+            for (const inventoryId of inventoryIds) {
+                const inventory = await this.inventoryRepository.findById(inventoryId);
+                if (!inventory) {
+                    throw new CustomError(`Inventory item with ID ${inventoryId} not found`, HttpStatus.NOT_FOUND);
+                }
+            }
+
+            await this.addonRecipeRepository.deleteByAddonId(data.addon_id);
+
+            await this.addonRecipeRepository.createMany(data.addon_id, data.recipes);
+
+            const addonRecipes = await this.addonRecipeRepository.findByAddonId(data.addon_id);
+
+            return this.excludeMetaFields(addonRecipes);
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+
+            this.logger.error(
+                `Error bulk creating addon recipes: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to create addon recipes", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     async updateAddonRecipe(id: number, data: UpdateAddonRecipe) {
         try {
             const existingRecipe = await this.addonRecipeRepository.findById(id);

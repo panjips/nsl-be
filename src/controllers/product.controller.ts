@@ -18,7 +18,7 @@ import { ProductService } from "services";
 import { RoleMiddlewareFactory, FormDataZodValidation } from "middleware";
 import { CreateProductDTO, UpdateProductDTO } from "dtos";
 
-@controller("/product", TYPES.AuthMiddleware)
+@controller("/product")
 export class ProductController extends BaseHttpController {
     constructor(
         @inject(TYPES.ProductService)
@@ -28,7 +28,7 @@ export class ProductController extends BaseHttpController {
         super();
     }
 
-    @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.PELANGGAN]))
+    @httpGet("/")
     public async getAllProducts(
         @queryParam("category_id") categoryId: string,
         @response() res: Response,
@@ -49,7 +49,7 @@ export class ProductController extends BaseHttpController {
         }
     }
 
-    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.PELANGGAN]))
+    @httpGet("/:id")
     public async getProductById(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -66,7 +66,7 @@ export class ProductController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK]), FormDataZodValidation(CreateProductDTO, "image"))
+    @httpPost("/", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), FormDataZodValidation(CreateProductDTO, "image"))
     public async createProduct(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const product = await this.productService.createProduct(req.body, req.file);
@@ -78,7 +78,7 @@ export class ProductController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK]), FormDataZodValidation(UpdateProductDTO, "image"))
+    @httpPut("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), FormDataZodValidation(UpdateProductDTO, "image"))
     public async updateProduct(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -95,7 +95,7 @@ export class ProductController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]))
     public async deleteProduct(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

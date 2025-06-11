@@ -40,7 +40,7 @@ export class AuthRepository {
             where: {
                 token,
                 is_active: true,
-                is_used: true,
+                is_used: false,
                 expires_at: {
                     gt: new Date(),
                 },
@@ -58,7 +58,7 @@ export class AuthRepository {
             },
             data: {
                 is_active: false,
-                is_used: false,
+                is_used: true,
             },
         });
     }

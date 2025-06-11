@@ -31,6 +31,9 @@ const R2_ENDPOINT = process.env.R2_ENDPOINT || "";
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "";
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
 
+const MIDTRANS_CLIENT_KEY = process.env.MIDTRANS_CLIENT_KEY || "";
+const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
+
 export const config = {
     port: PORT,
     dbUrl: DB_URL,
@@ -62,4 +65,8 @@ export const config = {
         endpoint: R2_ENDPOINT || "",
         publicUrl: R2_PUBLIC_URL || "",
     },
+    midtrans:{
+        clientKey: MIDTRANS_CLIENT_KEY || "",
+        serverKey: MIDTRANS_SERVER_KEY || "",
+    }
 };

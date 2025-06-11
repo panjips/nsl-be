@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
 import type { ProductRecipe, PrismaClient } from "@prisma/client";
 import { ILogger } from "utils";
-import { CreateProductRecipe, UpdateProductRecipe } from "models";
+import { CreateProductRecipe, ProductWithRecipe, UpdateProductRecipe } from "models";
 
 @injectable()
 export class ProductRecipeRepository {
@@ -11,14 +11,22 @@ export class ProductRecipeRepository {
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {}
 
-    async findAll(): Promise<ProductRecipe[]> {
-        return await this.prisma.productRecipe.findMany({
+    async findAll(): Promise<ProductWithRecipe[]> {
+        return await this.prisma.product.findMany({
             where: {
                 is_active: true,
+                recipes: {
+                    some: {
+                        is_active: true,
+                    },
+                },
             },
             include: {
-                product: true,
-                inventory: true,
+                recipes: {
+                    where: {
+                        is_active: true,
+                    },
+                },
             },
         });
     }
@@ -36,15 +44,23 @@ export class ProductRecipeRepository {
         });
     }
 
-    async findByProductId(productId: number): Promise<ProductRecipe[]> {
-        return await this.prisma.productRecipe.findMany({
+    async findByProductId(productId: number): Promise<ProductWithRecipe | null> {
+        return await this.prisma.product.findFirst({
             where: {
-                product_id: productId,
+                id: productId,
                 is_active: true,
+                recipes: {
+                    some: {
+                        is_active: true,
+                    },
+                },
             },
             include: {
-                product: true,
-                inventory: true,
+                recipes: {
+                    where: {
+                        is_active: true,
+                    },
+                },
             },
         });
     }
@@ -77,6 +93,19 @@ export class ProductRecipeRepository {
             `ProductRecipe created with ID ${data.id} for product ${productRecipe.product_id} and inventory ${productRecipe.inventory_id}`,
         );
         return data;
+    }
+
+    async createMany(productId: number, recipes: { inventory_id: number; quantity_used: number }[]): Promise<number> {
+        const createdRecipes = await this.prisma.productRecipe.createMany({
+            data: recipes.map((recipe) => ({
+                product_id: productId,
+                inventory_id: recipe.inventory_id,
+                quantity_used: recipe.quantity_used,
+            })),
+        });
+
+        this.logger.info(`Created ${createdRecipes.count} recipes for product ${productId}`);
+        return createdRecipes.count;
     }
 
     async update(id: number, productRecipe: UpdateProductRecipe): Promise<ProductRecipe | null> {

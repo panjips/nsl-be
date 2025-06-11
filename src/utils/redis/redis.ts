@@ -82,4 +82,13 @@ export class RedisService {
             return false;
         }
     }
+
+    async keys(pattern: string): Promise<string[]> {
+        try {
+            return await this.client.keys(pattern);
+        } catch (error) {
+            this.logger.error(`Redis keys error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            return [];
+        }
+    }
 }

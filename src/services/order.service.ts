@@ -10,10 +10,12 @@ import {
     UserRepository,
 } from "repositories";
 import { BaseService } from "./base.service";
-import { OrderStatus, OrderType } from "@prisma/client";
-import { nanoid } from "nanoid";
-import { CreateOrder } from "models";
+import { OrderStatus, OrderType, PaymentType } from "@prisma/client";
+import { CreateOrder, CreateOrderAddonItem, CreateOrderProductItem, MidtransItems } from "models";
 import { Decimal } from "@prisma/client/runtime/library";
+import { CreateOrderDTOType } from "dtos";
+import { InventoryUsageService } from "./inventoryUsage.service";
+import { PaymentService } from "./payment.service";
 
 @injectable()
 export class OrderService extends BaseService {
@@ -24,7 +26,9 @@ export class OrderService extends BaseService {
         @inject(TYPES.OrderAddonItemRepository) private readonly orderAddonItemRepository: OrderAddonItemRepository,
         @inject(TYPES.ProductRepository) private readonly productRepository: ProductRepository,
         @inject(TYPES.AddonRepository) private readonly addonRepository: AddonRepository,
+        @inject(TYPES.InventoryUsageService) private readonly inventoryUsageService: InventoryUsageService,
         @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
+        @inject(TYPES.PaymentService) private readonly paymentService: PaymentService,
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {
         super();
@@ -102,36 +106,22 @@ export class OrderService extends BaseService {
         }
     }
 
-    async getOrderByTransactionId(transactionId: string) {
+    async createOrder(data: CreateOrderDTOType) {
         try {
-            const order = await this.orderRepository.findByTrxId(transactionId);
-
-            if (!order) {
-                throw new CustomError("Order not found", HttpStatus.NOT_FOUND);
+            if (data.user_id) {
+                const user = await this.userRepository.getUserById(data.user_id);
+                if (!user) {
+                    throw new CustomError("User not found", HttpStatus.NOT_FOUND);
+                }
             }
 
-            return this.excludeMetaFields(order);
-        } catch (error) {
-            if (error instanceof CustomError) throw error;
-
-            this.logger.error(
-                `Error getting order by transaction ID ${transactionId}: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            throw new CustomError("Failed to retrieve order", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    async createOrder(data: any) {
-        try {
-            const user = await this.userRepository.getUserById(data.user_id);
-            if (!user) {
-                throw new CustomError("User not found", HttpStatus.NOT_FOUND);
-            }
-
-            const orderTrxId = `TRX-${nanoid(10)}`;
-
-            let totalAmount = 0;
-            const validatedItems: any[] = [];
+            let totalAmount = new Decimal(0);
+            const validatedItems: Partial<
+                CreateOrderProductItem & {
+                    addons: Partial<CreateOrderAddonItem>[];
+                }
+            >[] = [];
+            const midtransItems: MidtransItems[] = [];
 
             for (const item of data.items) {
                 const product = await this.productRepository.findById(item.product_id);
@@ -139,8 +129,17 @@ export class OrderService extends BaseService {
                     throw new CustomError(`Product with ID ${item.product_id} not found`, HttpStatus.NOT_FOUND);
                 }
 
-                let itemSubtotal = product.price.toNumber();
-                const addonItems: any[] = [];
+                let itemSubtotal = product.price.times(item.quantity || 1);
+                const addonItems: Partial<CreateOrderAddonItem>[] = [];
+
+                if (data.payment_type !== PaymentType.CASH) {
+                    midtransItems.push({
+                        id: `product-${product.id}`,
+                        name: product.name,
+                        price: product.price.toNumber(),
+                        quantity: item.quantity || 1,
+                    });
+                }
 
                 if (item.addons && item.addons.length > 0) {
                     for (const addonItem of item.addons) {
@@ -152,22 +151,37 @@ export class OrderService extends BaseService {
                             );
                         }
 
-                        const addonPrice = addon.price.toNumber();
-                        const addonQuantity = addonItem.quantity || 1;
-                        const addonTotalPrice = addonPrice * addonQuantity;
+                        const addonSubtotal = addon.price.times(addonItem.quantity || 1);
 
-                        itemSubtotal += addonTotalPrice;
+                        itemSubtotal = itemSubtotal.plus(addonSubtotal);
 
                         addonItems.push({
                             ...addonItem,
-                            price: addonPrice,
+                            cost: addon.cost,
+                            subtotal: addonSubtotal,
+                            addon_id: addon.id,
+                            quantity: addonItem.quantity || 1,
+                            price: addon.price,
                         });
+
+                        if (data.payment_type !== PaymentType.CASH) {
+                            midtransItems.push({
+                                id: `addon-${addon.id}`,
+                                name: `${product.name} - ${addon.name}`,
+                                price: addon.price.toNumber(),
+                                quantity: addonItem.quantity || 1,
+                            });
+                        }
                     }
                 }
 
-                totalAmount += itemSubtotal;
+                totalAmount = totalAmount.plus(itemSubtotal);
                 validatedItems.push({
                     ...item,
+                    cost: product.cost,
+                    product_id: product.id,
+                    quantity: item.quantity || 1,
+                    price: product.price,
                     subtotal: itemSubtotal,
                     addons: addonItems,
                 });
@@ -175,21 +189,26 @@ export class OrderService extends BaseService {
 
             const orderData = {
                 user_id: data.user_id,
-                order_trx_id: orderTrxId,
                 order_type: data.order_type,
                 order_status: OrderStatus.PENDING,
                 total_amount: new Decimal(totalAmount),
                 notes: data.notes,
-                order_date: data.order_date,
             } as CreateOrder;
 
             const order = await this.orderRepository.create(orderData);
 
             for (const item of validatedItems) {
+                if (!item.product_id || !item.cost || !item.price || !item.quantity || !item.subtotal) {
+                    throw new CustomError("Invalid order item data", HttpStatus.BAD_REQUEST);
+                }
+
                 const orderItem = await this.orderProductItemRepository.create({
-                    order_id: order.id,
                     product_id: item.product_id,
+                    cost: item.cost,
+                    price: item.price,
+                    quantity: item.quantity,
                     subtotal: item.subtotal,
+                    order_id: order.id,
                 });
 
                 if (item.addons && item.addons.length > 0) {
@@ -198,6 +217,8 @@ export class OrderService extends BaseService {
                         addon_id: addon.addon_id,
                         quantity: addon.quantity || 1,
                         price: addon.price,
+                        cost: addon.cost,
+                        subtotal: addon.subtotal,
                     }));
 
                     await this.orderAddonItemRepository.createMany(orderAddonItems);
@@ -205,7 +226,21 @@ export class OrderService extends BaseService {
             }
 
             const completeOrder = await this.orderRepository.findById(order.id);
-            return this.excludeMetaFields(completeOrder);
+
+            if (data.payment_type === PaymentType.CASH) {
+                this.inventoryUsageService.createManyInventoryUsages(order.id, validatedItems);
+            } else {
+                const midtransPayment = await this.paymentService.createPayment(
+                    data.payment_type,
+                    completeOrder,
+                    midtransItems,
+                );
+
+                return midtransPayment;
+            }
+            return {
+                order_id: completeOrder?.id,
+            };
         } catch (error) {
             if (error instanceof CustomError) throw error;
 

@@ -48,45 +48,10 @@ export class OrderRepository {
         });
     }
 
-    async findById(id: number): Promise<Order | null> {
+    async findById(id: number) {
         return await this.prisma.order.findFirst({
             where: {
                 id,
-                is_active: true,
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        phone_number: true,
-                    },
-                },
-                items: {
-                    where: {
-                        is_active: true,
-                    },
-                    include: {
-                        product: true,
-                        addons: {
-                            where: {
-                                is_active: true,
-                            },
-                            include: {
-                                addon: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-    }
-
-    async findByTrxId(orderTrxId: string): Promise<Order | null> {
-        return await this.prisma.order.findUnique({
-            where: {
-                order_trx_id: orderTrxId,
                 is_active: true,
             },
             include: {
@@ -290,7 +255,6 @@ export class OrderRepository {
             },
         });
 
-        this.logger.info(`Order created with ID ${data.id} and transaction ID ${data.order_trx_id}`);
         return data;
     }
 

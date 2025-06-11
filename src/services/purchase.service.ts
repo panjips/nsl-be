@@ -4,6 +4,7 @@ import { ILogger, CustomError } from "utils";
 import { PurchaseRepository, InventoryRepository } from "repositories";
 import { BaseService } from "./base.service";
 import { CreatePurchase, UpdatePurchase } from "models";
+import { Decimal } from "@prisma/client/runtime/library";
 
 @injectable()
 export class PurchaseService extends BaseService {
@@ -95,20 +96,22 @@ export class PurchaseService extends BaseService {
             if (!currentPurchase) {
                 throw new CustomError("Purchase not found", HttpStatus.NOT_FOUND);
             }
-
+            
             if (data.quantity !== undefined && data.quantity !== currentPurchase.quantity) {
                 const inventory = await this.inventoryRepository.findById(currentPurchase.inventory_id);
                 if (!inventory) {
                     throw new CustomError("Associated inventory item not found", HttpStatus.NOT_FOUND);
                 }
-
-                const quantityDifference = data.quantity.minus(currentPurchase.quantity);
+                
+                console.log(`Current purchase quantity: ${currentPurchase.quantity}, New quantity: ${data.quantity}`);
+                const quantityDifference = new Decimal(data.quantity).minus(currentPurchase.quantity);
                 await this.inventoryRepository.update(currentPurchase.inventory_id, {
                     quantity: inventory.quantity.add(quantityDifference),
                 });
 
                 this.logger.info(`Updated inventory ${currentPurchase.inventory_id} quantity by ${quantityDifference}`);
             }
+
 
             const purchase = await this.purchaseRepository.update(id, data);
             return this.excludeMetaFields(purchase);
