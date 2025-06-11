@@ -1,20 +1,6 @@
 version: "3.8"
 
 services:
-  # app:
-  #   build: .
-    # volumes:
-    #   - .:/app
-    #   - /app/node_modules
-    # ports:
-    #   - "3000:3000"
-    # env_file:
-    #   - .env.development
-    # depends_on:
-    #   - db
-    # networks:
-    #   - nsl-network
-
   db:
     image: postgres:15
     restart: always
@@ -23,39 +9,61 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    env_file:
+      - .env.development
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
       - nsl-network
-  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7
     restart: always
     container_name: nsl-redis
+    env_file:
+      - .env.development
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
       - "${REDIS_PORT}:6379"
     networks:
-        - nsl-network
+      - nsl-network
 
+  app:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.development
+    depends_on:
+      - db
+    networks:
+      - nsl-network
 
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
-  #     PGADMIN_DEFAULT_PASSWORD: admin
-  #   restart: always
-  #   ports:
-  #     - "5050:80"
-  #   depends_on:
-  #     - db
-  #   volumes:
-  #     - pgadmin-data:/var/lib/pgadmin
-  #   networks:
-  #     - nsl-network
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    restart: always
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - nsl-network
 
 volumes:
   db_data:
