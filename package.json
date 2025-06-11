@@ -13,7 +13,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
     "docker:up": "docker-compose --env-file .env.development up",
-    "docker:build": "docker-compose --env-file .env.development up --build"
+    "docker:build": "docker-compose --env-file .env.development up --build -d"
   },
   "keywords": [
     "nsl",
