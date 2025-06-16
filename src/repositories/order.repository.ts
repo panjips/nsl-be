@@ -48,6 +48,73 @@ export class OrderRepository {
         });
     }
 
+    async findAllWithFilter(status?: string, type?: string, startDate?: Date, endDate?: Date): Promise<Order[]> {
+        const whereClause: any = {
+            is_active: true,
+        };
+
+        if (status) {
+            whereClause.order_status = status;
+        }
+
+        if (type) {
+            whereClause.order_type = type;
+        }
+
+        if (startDate && endDate) {
+            whereClause.order_date = {
+                gte: startDate,
+                lte: endDate,
+            };
+        } else if (startDate) {
+            whereClause.order_date = {
+                gte: startDate,
+            };
+        } else if (endDate) {
+            whereClause.order_date = {
+                lte: endDate,
+            };
+        }
+
+        return await this.prisma.order.findMany({
+            where: whereClause,
+            include: {
+                payment: {
+                    where: {
+                        is_active: true,
+                    },
+                },
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone_number: true,
+                    },
+                },
+                items: {
+                    where: {
+                        is_active: true,
+                    },
+                    include: {
+                        product: true,
+                        addons: {
+                            where: {
+                                is_active: true,
+                            },
+                            include: {
+                                addon: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                order_date: "desc",
+            },
+        });
+    }
+
     async findById(id: number) {
         return await this.prisma.order.findFirst({
             where: {
@@ -90,6 +157,11 @@ export class OrderRepository {
                 is_active: true,
             },
             include: {
+                payment: {
+                    where: {
+                        is_active: true,
+                    },
+                },
                 user: {
                     select: {
                         id: true,

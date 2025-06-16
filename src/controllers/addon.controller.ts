@@ -17,7 +17,7 @@ import { AddonService } from "services";
 import { RoleMiddlewareFactory, ZodValidation } from "middleware";
 import { CreateAddonDTO, UpdateAddonDTO } from "dtos";
 
-@controller("/addon", TYPES.AuthMiddleware)
+@controller("/addon")
 export class AddonController extends BaseHttpController {
     constructor(
         @inject(TYPES.AddonService) private readonly addonService: AddonService,
@@ -26,7 +26,7 @@ export class AddonController extends BaseHttpController {
         super();
     }
 
-    @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/")
     public async getAllAddons(@response() res: Response, @next() next: NextFunction) {
         try {
             const addons = await this.addonService.getAllAddons();
@@ -37,7 +37,7 @@ export class AddonController extends BaseHttpController {
         }
     }
 
-    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/:id")
     public async getAddonById(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -54,7 +54,7 @@ export class AddonController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateAddonDTO))
+    @httpPost("/", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateAddonDTO))
     public async createAddon(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const addon = await this.addonService.createAddon(req.body);
@@ -65,7 +65,7 @@ export class AddonController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateAddonDTO))
+    @httpPut("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateAddonDTO))
     public async updateAddon(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -82,7 +82,7 @@ export class AddonController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]))
     public async deleteAddon(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

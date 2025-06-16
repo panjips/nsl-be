@@ -17,7 +17,7 @@ import { CategoryService } from "services";
 import { ZodValidation, RoleMiddlewareFactory } from "middleware";
 import { CreateCategoryDTO, UpdateCategoryDTO } from "dtos";
 
-@controller("/category", TYPES.AuthMiddleware)
+@controller("/category")
 export class CategoryController extends BaseHttpController {
     constructor(
         @inject(TYPES.CategoryService) private readonly categoryService: CategoryService,
@@ -26,7 +26,7 @@ export class CategoryController extends BaseHttpController {
         super();
     }
 
-    @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/")
     public async getAllCategories(@response() res: Response, @next() next: NextFunction) {
         try {
             const categories = await this.categoryService.getAllCategories();
@@ -37,7 +37,7 @@ export class CategoryController extends BaseHttpController {
         }
     }
 
-    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/:id")
     public async getCategoryById(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -54,7 +54,7 @@ export class CategoryController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateCategoryDTO))
+    @httpPost("/", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateCategoryDTO))
     public async createCategory(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const category = await this.categoryService.createCategory(req.body);
@@ -65,7 +65,7 @@ export class CategoryController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateCategoryDTO))
+    @httpPut("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateCategoryDTO))
     public async updateCategory(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -82,7 +82,7 @@ export class CategoryController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]))
     public async deleteCategory(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

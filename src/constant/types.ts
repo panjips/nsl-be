@@ -41,7 +41,11 @@ export const TYPES = {
     ReservationRepository: Symbol.for("ReservationRepository"),
     OrderCateringRepository: Symbol.for("OrderCateringRepository"),
     ReservationService: Symbol.for("ReservationService"),
-    SocketService: Symbol.for('SocketService'),
+    SocketService: Symbol.for("SocketService"),
     InventoryUsageRepository: Symbol.for("InventoryUsageRepository"),
     InventoryUsageService: Symbol.for("InventoryUsageService"),
+    CartRepository: Symbol.for("CartRepository"),
+    CartItemProductRepository: Symbol.for("CartItemProductRepository"),
+    CartItemAddonRepository: Symbol.for("CartItemAddonRepository"),
+    CartService: Symbol.for("CartService"),
 };

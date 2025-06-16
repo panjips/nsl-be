@@ -21,9 +21,8 @@ enum OrderStatus {
 }
 
 enum PaymentType {
-  GOPAY
-  SHOPEEPAY
-  QRIS
+  QRIS_MIDTRANS
+  QRIS_OFFLINE
   CASH
 }
 
@@ -32,14 +31,6 @@ enum TransactionStatus {
   EXPIRE
   FAILURE
   SUCCESS
-}
-
-enum DiscountType {
-  PERCENTAGE
-  FIXED_AMOUNT
-  BUY_X_GET_Y
-  HOLIDAY
-  PRODUCT_SPESIFIC
 }
 
 enum ReservationStatus {
@@ -81,7 +72,6 @@ model User {
   refreshTokens RefreshToken[]
   orders        Order[]
   reservations   Reservation[]
-  cartItems      CartItem[]
 }
 
 model PasswordResetToken {
@@ -139,10 +129,6 @@ model Product {
   category    Category?  @relation(fields: [category_id], references: [id])
   recipes      ProductRecipe[] 
   orderItems   OrderProductItem[]
-  discountsAsRequired Discount[] @relation("RequiredProduct")
-  discountsAsApplicable Discount[] @relation("ApplicableProduct")
-  discountsAsFree Discount[] @relation("FreeProduct")
-  cartItems    CartItem[]
 }
 
 model Addon {
@@ -158,7 +144,6 @@ model Addon {
 
   recipes      AddonRecipe[]
   orderAddonItems OrderAddonItem[]
-  cartItemAddons CartItemAddon[]
 }
 
 model Inventory {
@@ -223,7 +208,6 @@ model AddonRecipe {
 model Order {
   id            Int                @id @default(autoincrement())
   user_id       Int?
-  discount_id    Int?
   order_date    DateTime           @default(now())
   order_type    OrderType          @default(OFFLINE)
   order_status  OrderStatus        @default(PENDING)
@@ -235,9 +219,8 @@ model Order {
   deleted_at    DateTime?
 
   user          User?              @relation(fields: [user_id], references: [id])
-  discount      Discount?          @relation(fields: [discount_id], references: [id])
   items         OrderProductItem[]
-  payments      Payment[]
+  payment      Payment?
   inventoryUsages InventoryUsage[]
 }
 
@@ -278,7 +261,7 @@ model OrderAddonItem {
 
 model Payment {
   id              Int          @id @default(autoincrement())
-  order_id        Int
+  order_id        Int          @unique
   payment_type    PaymentType
   trx_status      TransactionStatus
   trx_time        DateTime?
@@ -287,41 +270,10 @@ model Payment {
   created_at      DateTime     @default(now())
   updated_at      DateTime     @updatedAt
   deleted_at      DateTime?
-
-  order           Order        @relation(fields: [order_id], references: [id])
+  
+  order           Order?        @relation(fields: [order_id], references: [id])
 }
 
-model Discount{
-  id              Int               @id @default(autoincrement())
-  code            String            @unique @db.VarChar(20)
-  type            DiscountType
-  discount_value  Decimal?          @db.Decimal(10, 2)
-
-  // BUY_X_GET_Y
-  min_order_amount    Int?
-  required_product_id Int?
-  required_quantity   Int?
-  free_product_id     Int?
-  free_quantity       Int?
-
-  // SPECIFIC_PRODUCT
-  applicable_product_id Int?
-
-  // HOLIDAY
-  start_date    DateTime?
-  end_date      DateTime?
-  max_used      Int
-  used_count    Int             @default(0)
-  is_active     Boolean           @default(true)
-  created_at    DateTime          @default(now())
-  updated_at    DateTime          @updatedAt
-  deleted_at    DateTime?
-
-  requireProduct       Product?     @relation("RequiredProduct", fields: [required_product_id], references: [id])
-  applicableProduct    Product?     @relation("ApplicableProduct", fields: [applicable_product_id], references: [id])
-  freeProduct   Product?            @relation("FreeProduct", fields: [free_product_id], references: [id])
-  orders        Order[]
-}
 
 model CateringPackage{
   id              Int               @id @default(autoincrement())
@@ -380,35 +332,6 @@ model OrderCatering{
   cateringPackage CateringPackage   @relation(fields: [catering_package_id], references: [id])
 }
 
-model CartItem{
-  id              Int               @id @default(autoincrement())
-  user_id         Int
-  product_id      Int
-  quantity        Int               @default(1)
-  is_active       Boolean           @default(true)
-  created_at      DateTime          @default(now())
-  updated_at      DateTime          @updatedAt
-  deleted_at      DateTime?
-
-  user            User              @relation(fields: [user_id], references: [id])
-  product         Product           @relation(fields: [product_id], references: [id])
-  addons          CartItemAddon[]
-}
-
-model CartItemAddon{
-  id              Int               @id @default(autoincrement())
-  cart_item_id    Int
-  addon_id        Int
-  quantity        Int               @default(1)
-  is_active       Boolean           @default(true)
-  created_at      DateTime          @default(now())
-  updated_at      DateTime          @updatedAt
-  deleted_at      DateTime?
-
-  cartItem        CartItem          @relation(fields: [cart_item_id], references: [id])
-  addon           Addon             @relation(fields: [addon_id], references: [id])
-}
-
 model InventoryUsage{
   id            Int        @id @default(autoincrement())
   order_id      Int
@@ -421,4 +344,14 @@ model InventoryUsage{
 
   order         Order      @relation(fields: [order_id], references: [id])
   inventory     Inventory  @relation(fields: [inventory_id], references: [id])
+}
+
+model Settings{
+  id            Int        @id @default(autoincrement())
+  isOpen       Boolean    @default(true)
+  openTime     String?    @db.VarChar(5)
+  closeTime    String?    @db.VarChar(5)
+
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
 }

@@ -1,4 +1,4 @@
-import type {Payment } from "@prisma/client";
+import type { Payment } from "@prisma/client";
 
 export type CreatePayment = Omit<Payment, "id" | "create_at" | "update_at" | "delete_at" | "is_active">;
 

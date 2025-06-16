@@ -50,7 +50,7 @@ import {
     R2Service,
     QueueService,
     SocketService,
-    MidtransService
+    MidtransService,
 } from "utils";
 import { AuthMiddleware } from "middleware";
 

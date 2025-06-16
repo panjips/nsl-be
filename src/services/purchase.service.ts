@@ -96,13 +96,13 @@ export class PurchaseService extends BaseService {
             if (!currentPurchase) {
                 throw new CustomError("Purchase not found", HttpStatus.NOT_FOUND);
             }
-            
+
             if (data.quantity !== undefined && data.quantity !== currentPurchase.quantity) {
                 const inventory = await this.inventoryRepository.findById(currentPurchase.inventory_id);
                 if (!inventory) {
                     throw new CustomError("Associated inventory item not found", HttpStatus.NOT_FOUND);
                 }
-                
+
                 console.log(`Current purchase quantity: ${currentPurchase.quantity}, New quantity: ${data.quantity}`);
                 const quantityDifference = new Decimal(data.quantity).minus(currentPurchase.quantity);
                 await this.inventoryRepository.update(currentPurchase.inventory_id, {
@@ -111,7 +111,6 @@ export class PurchaseService extends BaseService {
 
                 this.logger.info(`Updated inventory ${currentPurchase.inventory_id} quantity by ${quantityDifference}`);
             }
-
 
             const purchase = await this.purchaseRepository.update(id, data);
             return this.excludeMetaFields(purchase);

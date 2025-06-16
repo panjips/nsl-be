@@ -17,7 +17,7 @@ export class CateringPackageRepository {
                 is_active: true,
             },
             orderBy: {
-                name: 'asc',
+                name: "asc",
             },
         });
     }
@@ -89,7 +89,7 @@ export class CateringPackageRepository {
                 },
             },
             orderBy: {
-                price: 'asc',
+                price: "asc",
             },
         });
     }

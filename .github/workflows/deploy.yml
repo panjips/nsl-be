@@ -1,0 +1,43 @@
+name: CI/CD Format, Lint & Deploy (Node.js)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: nsl-be
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Format code
+        run: npm run format
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ~/projects/nsl-be
+            git reset --hard
+            git pull origin main
+            docker-compose build --no-cache
+            docker-compose --env-file .env.development up -d

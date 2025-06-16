@@ -39,7 +39,7 @@ export class ProductController extends BaseHttpController {
             if (categoryId && !isNaN(Number(categoryId))) {
                 products = await this.productService.getProductsByCategory(Number(categoryId));
             } else {
-                products = await this.productService.getAllProducts();
+                products = await this.productService.getAllProductsAvailableStock();
             }
 
             return res.status(HttpStatus.OK).json(ApiResponse.success("Products retrieved successfully", products));
@@ -66,11 +66,15 @@ export class ProductController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), FormDataZodValidation(CreateProductDTO, "image"))
+    @httpPost(
+        "/",
+        TYPES.AuthMiddleware,
+        RoleMiddlewareFactory([Role.PEMILIK]),
+        FormDataZodValidation(CreateProductDTO, "image"),
+    )
     public async createProduct(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const product = await this.productService.createProduct(req.body, req.file);
-
             return res.status(HttpStatus.CREATED).json(ApiResponse.success("Product created successfully", product));
         } catch (error) {
             this.logger.error(`Error creating product: ${error instanceof Error ? error.message : String(error)}`);
@@ -78,7 +82,12 @@ export class ProductController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), FormDataZodValidation(UpdateProductDTO, "image"))
+    @httpPut(
+        "/:id",
+        TYPES.AuthMiddleware,
+        RoleMiddlewareFactory([Role.PEMILIK]),
+        FormDataZodValidation(UpdateProductDTO, "image"),
+    )
     public async updateProduct(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

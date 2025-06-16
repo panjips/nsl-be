@@ -65,8 +65,8 @@ export const config = {
         endpoint: R2_ENDPOINT || "",
         publicUrl: R2_PUBLIC_URL || "",
     },
-    midtrans:{
+    midtrans: {
         clientKey: MIDTRANS_CLIENT_KEY || "",
         serverKey: MIDTRANS_SERVER_KEY || "",
-    }
+    },
 };

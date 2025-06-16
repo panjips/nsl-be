@@ -1,29 +1,31 @@
-import { HttpStatus, Role, TYPES } from "constant";
+import { HttpStatus, TYPES } from "constant";
 import { inject } from "inversify";
-import {
-    controller,
-    httpPost,
-    httpGet,
-    httpPut,
-    httpDelete,
-    request,
-    response,
-    next,
-    BaseHttpController,
-} from "inversify-express-utils";
+import { controller, httpPost, request, response, next, BaseHttpController } from "inversify-express-utils";
 import type { NextFunction, Request, Response } from "express";
-import { ApiResponse, CustomError, ILogger } from "utils";
+import { ApiResponse, ILogger } from "utils";
 import { PaymentService } from "services";
-import { RoleMiddlewareFactory, ZodValidation } from "middleware";
-import { CreatePaymentDTO, UpdatePaymentDTO } from "dtos";
+import { ZodValidation } from "middleware";
+import { MidtransNotificationSchema } from "dtos";
 
-@controller("/payment", TYPES.AuthMiddleware)
+@controller("/payment")
 export class PaymentController extends BaseHttpController {
     constructor(
         @inject(TYPES.PaymentService) private readonly paymentService: PaymentService,
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {
         super();
+    }
+
+    @httpPost("/notification-handler", ZodValidation(MidtransNotificationSchema))
+    public async handleNotification(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+        try {
+            const notificationData = req.body;
+            await this.paymentService.updateMidtransPayment(notificationData);
+            return res.status(HttpStatus.OK).json(ApiResponse.success("OK"));
+        } catch (error) {
+            this.logger.error(`Error handling notification: ${error instanceof Error ? error.message : String(error)}`);
+            next(error);
+        }
     }
 
     // @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))

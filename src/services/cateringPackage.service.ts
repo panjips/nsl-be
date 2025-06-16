@@ -50,7 +50,9 @@ export class CateringPackageService extends BaseService {
             const pkg = await this.cateringPackageRepository.create(data);
             return this.excludeMetaFields(pkg);
         } catch (error) {
-            this.logger.error(`Error creating catering package: ${error instanceof Error ? error.message : String(error)}`);
+            this.logger.error(
+                `Error creating catering package: ${error instanceof Error ? error.message : String(error)}`,
+            );
             throw new CustomError("Failed to create catering package", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

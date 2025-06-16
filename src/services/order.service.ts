@@ -33,10 +33,21 @@ export class OrderService extends BaseService {
     ) {
         super();
     }
-
-    async getAllOrders() {
+    async getAllOrders(status?: string, type?: string, startDate?: string, endDate?: string) {
         try {
-            const orders = await this.orderRepository.findAll();
+            const parsedStartDate = startDate ? new Date(startDate) : undefined;
+            const parsedEndDate = endDate ? new Date(endDate) : undefined;
+
+            console.log(
+                `Fetching orders with filters - Status: ${status}, Type: ${type}, Start Date: ${parsedStartDate}, End Date: ${parsedEndDate}`,
+            );
+            const orders = await this.orderRepository.findAllWithFilter(
+                (status as OrderStatus) || undefined,
+                (type as OrderType) || undefined,
+                parsedStartDate,
+                parsedEndDate,
+            );
+
             return this.excludeMetaFields(orders);
         } catch (error) {
             this.logger.error(`Error getting all orders: ${error instanceof Error ? error.message : String(error)}`);
@@ -123,6 +134,22 @@ export class OrderService extends BaseService {
             >[] = [];
             const midtransItems: MidtransItems[] = [];
 
+            let paymentType: PaymentType;
+            switch (data.payment_type.toUpperCase()) {
+                case "CASH":
+                    paymentType = "CASH";
+                    break;
+                case "QRIS MIDTRANS":
+                    paymentType = "QRIS_MIDTRANS";
+                    break;
+                case "QRIS OFFLINE":
+                    paymentType = "QRIS_OFFLINE";
+                    break;
+                default:
+                    this.logger.warn(`Unsupported payment type: ${data.payment_type}`);
+                    throw new CustomError(`Unsupported payment type: ${data.payment_type}`, HttpStatus.BAD_REQUEST);
+            }
+
             for (const item of data.items) {
                 const product = await this.productRepository.findById(item.product_id);
                 if (!product) {
@@ -132,7 +159,7 @@ export class OrderService extends BaseService {
                 let itemSubtotal = product.price.times(item.quantity || 1);
                 const addonItems: Partial<CreateOrderAddonItem>[] = [];
 
-                if (data.payment_type !== PaymentType.CASH) {
+                if (paymentType === PaymentType.QRIS_MIDTRANS) {
                     midtransItems.push({
                         id: `product-${product.id}`,
                         name: product.name,
@@ -164,7 +191,7 @@ export class OrderService extends BaseService {
                             price: addon.price,
                         });
 
-                        if (data.payment_type !== PaymentType.CASH) {
+                        if (paymentType === PaymentType.QRIS_MIDTRANS) {
                             midtransItems.push({
                                 id: `addon-${addon.id}`,
                                 name: `${product.name} - ${addon.name}`,
@@ -186,6 +213,8 @@ export class OrderService extends BaseService {
                     addons: addonItems,
                 });
             }
+
+            data.user_id = data.order_type === OrderType.ONLINE ? data.user_id : undefined;
 
             const orderData = {
                 user_id: data.user_id,
@@ -227,11 +256,12 @@ export class OrderService extends BaseService {
 
             const completeOrder = await this.orderRepository.findById(order.id);
 
-            if (data.payment_type === PaymentType.CASH) {
-                this.inventoryUsageService.createManyInventoryUsages(order.id, validatedItems);
+            if (paymentType !== PaymentType.QRIS_MIDTRANS) {
+                await this.inventoryUsageService.createManyInventoryUsages(order.id, validatedItems);
+                await this.paymentService.createPayment(paymentType, completeOrder);
             } else {
                 const midtransPayment = await this.paymentService.createPayment(
-                    data.payment_type,
+                    paymentType,
                     completeOrder,
                     midtransItems,
                 );

@@ -30,6 +30,7 @@ export class SocketService {
 
     emit(event: string, data: any): void {
         if (this.io) {
+            this.logger.info(`Emitting event: ${event}`, data);
             this.io.emit(event, data);
         } else {
             this.logger.error("Socket.IO server is not initialized");

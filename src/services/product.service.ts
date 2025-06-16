@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { HttpStatus, TYPES, FILE_NAME, QUEUE_KEY, JOB_KEY } from "constant";
 import { ILogger, CustomError, R2Service, QueueService } from "utils";
-import { ProductRepository } from "repositories";
+import { InventoryRepository, ProductRecipeRepository, ProductRepository } from "repositories";
 import { BaseService } from "./base.service";
 import { CreateProduct, UpdateProduct } from "models";
 
@@ -9,6 +9,8 @@ import { CreateProduct, UpdateProduct } from "models";
 export class ProductService extends BaseService {
     constructor(
         @inject(TYPES.ProductRepository) private readonly productRepository: ProductRepository,
+        @inject(TYPES.ProductRecipeRepository) private readonly productRecipeRepository: ProductRecipeRepository,
+        @inject(TYPES.InventoryRepository) private readonly inventoryRepository: InventoryRepository,
         @inject(TYPES.R2Service) private readonly r2Service: R2Service,
         @inject(TYPES.QueueService) private readonly queueService: QueueService,
         @inject(TYPES.Logger) private readonly logger: ILogger,
@@ -70,6 +72,94 @@ export class ProductService extends BaseService {
         } catch (error) {
             this.logger.error(`Error getting all products: ${error instanceof Error ? error.message : String(error)}`);
             throw new CustomError("Failed to retrieve products", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getProductAvailableStock(productId: number) {
+        try {
+            const product = await this.productRepository.findById(productId);
+            if (!product) {
+                throw new CustomError("Product not found", HttpStatus.NOT_FOUND);
+            }
+
+            const productWithRecipes = await this.productRecipeRepository.findByProductId(productId);
+
+            if (!productWithRecipes || !productWithRecipes.recipes || productWithRecipes.recipes.length === 0) {
+                return {
+                    ...this.excludeMetaFields(product),
+                    possible_qty: 0,
+                    message: "No recipes found for this product",
+                };
+            }
+
+            let maxPossibleQuantity: number | null = null;
+            let limitingIngredients: any[] = [];
+
+            for (const recipe of productWithRecipes.recipes) {
+                const inventory = await this.inventoryRepository.findById(recipe.inventory_id);
+                if (!inventory) {
+                    throw new CustomError(
+                        `Inventory item ${recipe.inventory_id} referenced in recipe not found`,
+                        HttpStatus.NOT_FOUND,
+                    );
+                }
+
+                const quantityNeeded = Number(recipe.quantity_used);
+                const inventoryAvailable = Number(inventory.quantity);
+                const possibleQuantity = Math.floor(inventoryAvailable / quantityNeeded);
+
+                const ingredientInfo = {
+                    inventory_id: inventory.id,
+                    name: inventory.name,
+                    available: inventoryAvailable,
+                    unit: inventory.unit,
+                    neededPerUnit: quantityNeeded,
+                    possibleQuantity: possibleQuantity,
+                };
+
+                if (maxPossibleQuantity === null || possibleQuantity < maxPossibleQuantity) {
+                    maxPossibleQuantity = possibleQuantity;
+                    limitingIngredients = [ingredientInfo];
+                } else if (possibleQuantity === maxPossibleQuantity) {
+                    limitingIngredients.push(ingredientInfo);
+                }
+            }
+
+            return this.excludeMetaFields({ ...product, possible_qty: maxPossibleQuantity });
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+            this.logger.error(
+                `Error calculating product stock availability for ID ${productId}: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to calculate product availability", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getAllProductsAvailableStock() {
+        try {
+            // Get all products
+            const products = await this.productRepository.findAll();
+            const results = [];
+
+            for (const product of products) {
+                try {
+                    const productAvailability = await this.getProductAvailableStock(product.id);
+                    results.push(productAvailability);
+                } catch (error) {
+                    this.logger.error(
+                        `Error calculating stock for product ${product.id}: ${error instanceof Error ? error.message : String(error)}`,
+                    );
+
+                    results.push(this.excludeMetaFields({ ...product, possible_qty: 0 }));
+                }
+            }
+
+            return results;
+        } catch (error) {
+            this.logger.error(
+                `Error calculating all products stock availability: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to calculate products availability", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

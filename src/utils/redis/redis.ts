@@ -87,7 +87,7 @@ export class RedisService {
         try {
             return await this.client.keys(pattern);
         } catch (error) {
-            this.logger.error(`Redis keys error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            this.logger.error(`Redis keys error: ${error instanceof Error ? error.message : "Unknown error"}`);
             return [];
         }
     }

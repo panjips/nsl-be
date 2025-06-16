@@ -17,7 +17,6 @@ import { ApiResponse, CustomError, ILogger } from "utils";
 import { OrderService } from "services";
 import { RoleMiddlewareFactory, ZodValidation } from "middleware";
 import { CreateOrderDTO, UpdateOrderDTO, UpdateOrderStatusDTO } from "dtos";
-import { OrderStatus, OrderType } from "@prisma/client";
 
 @controller("/order", TYPES.AuthMiddleware)
 export class OrderController extends BaseHttpController {
@@ -32,19 +31,22 @@ export class OrderController extends BaseHttpController {
     public async getAllOrders(
         @queryParam("status") status: string,
         @queryParam("type") type: string,
+        @queryParam("startDate") startDate: string,
+        @queryParam("endDate") endDate: string,
         @response() res: Response,
         @next() next: NextFunction,
     ) {
         try {
-            let orders;
-            if (status && Object.values(OrderStatus).includes(status as OrderStatus)) {
-                orders = await this.orderService.getOrdersByStatus(status as OrderStatus);
-            } else if (type && Object.values(OrderType).includes(type as OrderType)) {
-                orders = await this.orderService.getOrdersByType(type as OrderType);
-            } else {
-                orders = await this.orderService.getAllOrders();
-            }
+            // let orders;
+            // if (status && Object.values(OrderStatus).includes(status as OrderStatus)) {
+            //     orders = await this.orderService.getOrdersByStatus(status as OrderStatus);
+            // } else if (type && Object.values(OrderType).includes(type as OrderType)) {
+            //     orders = await this.orderService.getOrdersByType(type as OrderType);
+            // } else {
+            //     orders = await this.orderService.getAllOrders();
+            // }
 
+            let orders = await this.orderService.getAllOrders(status, type, startDate, endDate);
             return res.status(HttpStatus.OK).json(ApiResponse.success("Orders retrieved successfully", orders));
         } catch (error) {
             this.logger.error("Error retrieving orders");
@@ -65,10 +67,10 @@ export class OrderController extends BaseHttpController {
         }
     }
 
-    @httpGet("/user/:userId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/user")
     public async getOrdersByUserId(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
-            const userId = Number(req.params.userId);
+            const userId = Number(req.user?.id);
 
             if (isNaN(userId)) {
                 throw new CustomError("Invalid user ID", HttpStatus.BAD_REQUEST);
@@ -97,23 +99,6 @@ export class OrderController extends BaseHttpController {
             return res.status(HttpStatus.OK).json(ApiResponse.success("Order retrieved successfully", order));
         } catch (error) {
             this.logger.error(`Error retrieving order with ID ${req.params.id}`);
-            next(error);
-        }
-    }
-
-    @httpGet("/transaction/:trxId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
-    public async getOrderByTransactionId(
-        @request() req: Request,
-        @response() res: Response,
-        @next() next: NextFunction,
-    ) {
-        try {
-            const trxId = req.params.trxId;
-            const order = await this.orderService.getOrderByTransactionId(trxId);
-
-            return res.status(HttpStatus.OK).json(ApiResponse.success("Order retrieved successfully", order));
-        } catch (error) {
-            this.logger.error(`Error retrieving order with transaction ID ${req.params.trxId}`);
             next(error);
         }
     }

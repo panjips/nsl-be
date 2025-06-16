@@ -29,18 +29,17 @@ export class UserController extends BaseHttpController {
     }
 
     @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK]))
-    public async getUser(
-        @queryParam("type") type: string,
-        @response() res: Response, @next() next: NextFunction) {
+    public async getUser(@queryParam("type") type: string, @response() res: Response, @next() next: NextFunction) {
         try {
-            if (type && !['employee', 'customer'].includes(type)) {
-                throw new CustomError("Invalid type parameter. Must be either 'employee' or 'customer'", HttpStatus.BAD_REQUEST);
+            if (type && !["employee", "customer"].includes(type)) {
+                throw new CustomError(
+                    "Invalid type parameter. Must be either 'employee' or 'customer'",
+                    HttpStatus.BAD_REQUEST,
+                );
             }
 
             const users = await this.userService.getAllUsers(type);
-            return res.status(HttpStatus.OK).json(
-                ApiResponse.success("Users retrieved successfully", users)
-            );
+            return res.status(HttpStatus.OK).json(ApiResponse.success("Users retrieved successfully", users));
         } catch (error) {
             next(error);
         }

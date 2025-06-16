@@ -18,15 +18,15 @@ export class UserRepository {
                 is_active: true,
             };
 
-            if (type === 'employee') {
+            if (type === "employee") {
                 whereClause.role = {
                     name: {
-                        not: Role.PELANGGAN
-                    }
+                        not: Role.PELANGGAN,
+                    },
                 };
-            } else if (type === 'customer') {
+            } else if (type === "customer") {
                 whereClause.role = {
-                    name: Role.PELANGGAN
+                    name: Role.PELANGGAN,
                 };
             }
 
@@ -36,11 +36,11 @@ export class UserRepository {
                     role: true,
                 },
                 orderBy: {
-                    id: 'asc',
+                    id: "asc",
                 },
             });
 
-            this.logger.info(`Fetched all users successfully with type filter: ${type || 'none'}`);
+            this.logger.info(`Fetched all users successfully with type filter: ${type || "none"}`);
             return users;
         } catch (error) {
             if (error instanceof PrismaClientKnownRequestError) {
