@@ -129,6 +129,20 @@ export class AuthController extends BaseHttpController {
         }
     }
 
+    @httpPost("/reset-password-profile", TYPES.AuthMiddleware)
+    public async resetPasswordProfile(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+        try {
+            const { newPassword } = req.body;
+            const userId = Number(req.user?.id);
+            await this.authService.resetPasswordProfile(userId, newPassword);
+            this.logger.info("Profile password reset successfully");
+            return res.status(HttpStatus.OK).json(ApiResponse.success("Profile password reset successfully"));
+        } catch (error) {
+            this.logger.error("Error resetting profile password");
+            next(error);
+        }
+    }
+
     @httpPost("/logout", TYPES.AuthMiddleware)
     public async logout(@cookies() cookies: { refreshToken: string }, @response() res: Response, next: NextFunction) {
         try {

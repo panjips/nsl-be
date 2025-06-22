@@ -25,17 +25,14 @@ export class AuthService extends BaseService {
         @inject(TYPES.JwtService) private readonly jwtService: JwtService,
     ) {
         super();
-
         this.initializeQueue();
     }
 
     private initializeQueue(): void {
         this.queueService.createQueue(QUEUE_KEY.TOKEN_QUEUE);
-
         this.queueService.registerProcessor(JOB_KEY.REMOVE_REFRESH_TOKEN_JOB, async (job) =>
             this.processRemoveRefreshToken(job),
         );
-
         this.logger.info("Token management queue initialized");
     }
 
@@ -140,6 +137,23 @@ export class AuthService extends BaseService {
 
     public async logoutAll(userId: number): Promise<void> {
         await this.authRepository.invalidateAllUserRefreshTokens(userId);
+    }
+
+    public async resetPasswordProfile(userId: number, newPassword: string): Promise<void> {
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const user = await this.userRepository.updateUser(userId, {
+            password: hashedPassword,
+        });
+        if (!user) {
+            throw new CustomError("User not found", HttpStatus.NOT_FOUND);
+        }
+        this.logger.info(`Password reset successfully for user ID: ${userId}`);
+        await this.mailService.notify(
+            user.email,
+            "Password Reset Confirmation",
+            "Your password has been reset successfully. If you did not request this change, please contact support immediately.",
+        );
+        this.logger.info(`Password reset confirmation email sent to ${user.email}`);
     }
 
     public async storeRefreshToken(userId: number, token: string): Promise<void> {

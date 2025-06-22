@@ -17,6 +17,7 @@ services:
       - db_data:/var/lib/postgresql/data
     networks:
       - nsl-network
+      - cloudflare-tunnel
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
@@ -35,6 +36,7 @@ services:
       - "${REDIS_PORT}:6379"
     networks:
       - nsl-network
+      - cloudflare-tunnel
 
   app:
     build: .
@@ -49,6 +51,7 @@ services:
       - db
     networks:
       - nsl-network
+      - cloudflare-tunnel
 
   pgadmin:
     image: dpage/pgadmin4
@@ -64,6 +67,7 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     networks:
       - nsl-network
+      - cloudflare-tunnel
 
 volumes:
   db_data:
@@ -71,3 +75,5 @@ volumes:
 networks:
   nsl-network:
     driver: bridge
+  cloudflare-tunnel:
+    driver: external

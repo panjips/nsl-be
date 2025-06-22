@@ -44,8 +44,6 @@ export const TYPES = {
     SocketService: Symbol.for("SocketService"),
     InventoryUsageRepository: Symbol.for("InventoryUsageRepository"),
     InventoryUsageService: Symbol.for("InventoryUsageService"),
-    CartRepository: Symbol.for("CartRepository"),
-    CartItemProductRepository: Symbol.for("CartItemProductRepository"),
-    CartItemAddonRepository: Symbol.for("CartItemAddonRepository"),
-    CartService: Symbol.for("CartService"),
+    ReportService: Symbol.for("ReportService"),
+
 };

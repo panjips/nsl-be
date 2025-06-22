@@ -152,4 +152,26 @@ export class InventoryUsageRepository {
             },
         });
     }
+
+    async getInventoryUsageReport(startDate: Date, endDate: Date) {
+        return this.prisma.inventory.findMany({
+            where: {
+                is_active: true,
+            },
+            include: {
+                inventoryUsages: {
+                    where: {
+                        is_active: true,
+                        created_at: {
+                            gte: startDate,
+                            lte: endDate,
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                unit: "asc",
+            },
+        });
+    }
 }

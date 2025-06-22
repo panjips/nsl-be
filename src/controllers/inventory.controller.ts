@@ -13,7 +13,7 @@ import {
 } from "inversify-express-utils";
 import type { NextFunction, Request, Response } from "express";
 import { ApiResponse, CustomError, ILogger } from "utils";
-import { InventoryService } from "services";
+import { InventoryService, InventoryUsageService } from "services";
 import { RoleMiddlewareFactory, ZodValidation } from "middleware";
 import { CreateInventoryDTO, UpdateInventoryDTO } from "dtos";
 
@@ -21,6 +21,7 @@ import { CreateInventoryDTO, UpdateInventoryDTO } from "dtos";
 export class InventoryController extends BaseHttpController {
     constructor(
         @inject(TYPES.InventoryService) private readonly inventoryService: InventoryService,
+        @inject(TYPES.InventoryUsageService) private readonly inventoryUsageService: InventoryUsageService,
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {
         super();
@@ -38,6 +39,20 @@ export class InventoryController extends BaseHttpController {
             next(error);
         }
     }
+
+    @httpGet("/usage", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
+    public async getInventoryUsage(@response() res: Response, @next() next: NextFunction) {
+        try {
+            const inventory = await this.inventoryUsageService.getAllInventoryUsages();
+            return res
+                .status(HttpStatus.OK)
+                .json(ApiResponse.success("Inventory items retrieved successfully", inventory));
+        } catch (error) {
+            this.logger.error("Error retrieving inventory items");
+            next(error);
+        }
+    }
+
     @httpGet("/low-stock", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async getLowStockInventory(@response() res: Response, @next() next: NextFunction) {
         try {

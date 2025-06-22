@@ -10,3 +10,5 @@ export * from "./payment.controller";
 export * from "./recipe.controller";
 export * from "./cateringPackage.controller";
 export * from "./reservation.controller";
+export * from "./report.controller";
+export * from "./dashboard.controller";

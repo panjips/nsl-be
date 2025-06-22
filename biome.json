@@ -32,7 +32,8 @@
                 "useConst": "off"
             },
             "correctness": {
-                "noInvalidUseBeforeDeclaration": "off"
+                "noInvalidUseBeforeDeclaration": "off",
+                "noSwitchDeclarations": "off"
             },
             "complexity": {
                 "noUselessConstructor": "off",

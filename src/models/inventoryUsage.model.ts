@@ -32,3 +32,11 @@ export interface InventoryUsageWithRelations {
         order_status: string;
     };
 }
+
+export interface InventoryUsageReport {
+    id: number;
+    name: string;
+    unit: string;
+    total_quantity_used: number;
+    current_stock: number;
+}

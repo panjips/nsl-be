@@ -105,4 +105,26 @@ export class PurchaseRepository {
         this.logger.error(`Failed to delete purchase with ID ${id}`);
         return false;
     }
+
+    async getInventoryPurchaseReport(startDate: Date, endDate: Date) {
+        return this.prisma.inventory.findMany({
+            where: {
+                is_active: true,
+            },
+            include: {
+                purchases: {
+                    where: {
+                        is_active: true,
+                        purchase_date: {
+                            gte: startDate,
+                            lte: endDate,
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                id: "asc",
+            },
+        });
+    }
 }

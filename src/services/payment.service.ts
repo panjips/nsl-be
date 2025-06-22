@@ -150,7 +150,9 @@ export class PaymentService extends BaseService {
         try {
             const serverKey = config.midtrans.serverKey;
 
-            data.order_id = this.toOrderId(data.order_id).toString();
+            const order_id = this.toOrderId(data.order_id).toString();
+
+            // console.log(data.order_id)
 
             const localHash = crypto
                 .createHash("sha512")
@@ -166,9 +168,9 @@ export class PaymentService extends BaseService {
                 throw new CustomError("Invalid signature", HttpStatus.UNAUTHORIZED);
             }
 
-            const payment = await this.paymentRepository.findByOrderId(Number(data.order_id));
+            const payment = await this.paymentRepository.findByOrderId(Number(order_id));
             if (!payment || payment.length === 0) {
-                this.logger.warn(`Payment not found for order ${data.order_id}`);
+                this.logger.warn(`Payment not found for order ${order_id}`);
                 throw new CustomError("Payment not found", HttpStatus.NOT_FOUND);
             }
 
@@ -186,7 +188,11 @@ export class PaymentService extends BaseService {
                     trx_status = TransactionStatus.SUCCESS;
                     break;
                 case "cancel":
+                    trx_status = TransactionStatus.FAILURE;
+                    break;
                 case "deny":
+                    trx_status = TransactionStatus.FAILURE;
+                    break;
                 case "expire":
                     trx_status = TransactionStatus.FAILURE;
                     break;
@@ -203,31 +209,31 @@ export class PaymentService extends BaseService {
             });
 
             this.logger.info(
-                `Payment for order ${data.order_id} updated to status ${trx_status} with amount ${data.gross_amount}`,
+                `Payment for order ${order_id} updated to status ${trx_status} with amount ${data.gross_amount}`,
             );
 
             if (trx_status === TransactionStatus.SUCCESS) {
-                const order = await this.orderRepository.findById(Number(data.order_id));
+                const order = await this.orderRepository.findById(Number(order_id));
                 if (!order) {
-                    this.logger.warn(`Order not found for payment ${data.order_id}`);
+                    this.logger.warn(`Order not found for payment ${order_id}`);
                     throw new CustomError("Order not found", HttpStatus.NOT_FOUND);
                 }
 
-                const update = await this.orderRepository.update(Number(data.order_id), {
+                const update = await this.orderRepository.update(Number(order_id), {
                     order_status: order?.order_type === "ONLINE" ? OrderStatus.PROCESSING : OrderStatus.COMPLETED,
                 });
 
-                const validatedItems = await this.convertOrderToOrderMapping(Number(data.order_id));
-                await this.inventoryUsageService.createManyInventoryUsages(Number(data.order_id), validatedItems);
+                const validatedItems = await this.convertOrderToOrderMapping(Number(order_id));
+                await this.inventoryUsageService.createManyInventoryUsages(Number(order_id), validatedItems);
 
-                this.logger.info(`Order ${data.order_id} status updated to PROCESSING`);
+                this.logger.info(`Order ${order_id} status updated to PROCESSING`);
                 if (order?.order_type === "ONLINE") {
                     this.ws.emit("new_online_order", update);
                 }
             }
 
             return {
-                order_id: data.order_id,
+                order_id: order_id,
                 trx_status: trx_status,
                 paid_amount: data.gross_amount,
             };

@@ -23,6 +23,18 @@ export class InventoryUsageService extends BaseService {
         super();
     }
 
+    async getAllInventoryUsages() {
+        try {
+            const usages = await this.inventoryUsageRepository.findAll();
+            return this.excludeMetaFields(usages);
+        } catch (error) {
+            this.logger.error(
+                `Error getting all inventory usages: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to retrieve inventory usages", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     async createManyInventoryUsages(order_id: number, items: OrderMapping) {
         try {
             if (!items.length) {

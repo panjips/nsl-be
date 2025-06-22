@@ -1,8 +1,8 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
-import type { Order, OrderStatus, OrderType, PrismaClient } from "@prisma/client";
+import { Order, OrderStatus, OrderType, PrismaClient, TransactionStatus } from "@prisma/client";
 import { ILogger } from "utils";
-import { CreateOrder, UpdateOrder } from "models";
+import { CreateOrder, FilterReportStatus, UpdateOrder } from "models";
 
 @injectable()
 export class OrderRepository {
@@ -456,11 +456,124 @@ export class OrderRepository {
                     gte: startDate,
                     lte: endDate,
                 },
-                order_status: "COMPLETED",
+                order_status: OrderStatus.COMPLETED,
                 is_active: true,
+                payment: {
+                    trx_status: TransactionStatus.SUCCESS,
+                },
             },
         });
 
         return result._sum.total_amount?.toNumber() || 0;
+    }
+
+    async getCountOrdersByDateRange(startDate: Date, endDate: Date): Promise<number> {
+        const result = await this.prisma.order.count({
+            where: {
+                order_date: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+                is_active: true,
+                order_status: OrderStatus.COMPLETED,
+                payment: {
+                    trx_status: TransactionStatus.SUCCESS,
+                },
+            },
+        });
+
+        return result;
+    }
+
+    async getSalesReport(params: FilterReportStatus) {
+        const { startDate, endDate, paymentType, orderType } = params;
+
+        const whereClause: any = {
+            is_active: true,
+            order_status: OrderStatus.COMPLETED,
+        };
+
+        if (startDate && endDate) {
+            whereClause.order_date = {
+                gte: startDate,
+                lte: endDate,
+            };
+        } else if (startDate) {
+            whereClause.order_date = {
+                gte: startDate,
+            };
+        } else if (endDate) {
+            whereClause.order_date = {
+                lte: endDate,
+            };
+        }
+
+        console.log(paymentType);
+
+        if (orderType) {
+            whereClause.order_type = orderType;
+        }
+
+        return await this.prisma.order.findMany({
+            where: whereClause,
+            include: {
+                items: {
+                    where: {
+                        is_active: true,
+                    },
+                    include: {
+                        product: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                        addons: {
+                            where: {
+                                is_active: true,
+                            },
+                            include: {
+                                addon: {
+                                    select: {
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                payment: {
+                    where: {
+                        is_active: true,
+                        AND: {
+                            trx_status: TransactionStatus.SUCCESS,
+                            payment_type: paymentType ? paymentType : undefined,
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                order_date: "desc",
+            },
+        });
+    }
+
+    async getOrderStatistics(userId: number) {
+        return await this.prisma.order.findMany({
+            where: {
+                user_id: userId,
+                is_active: true,
+                order_status: OrderStatus.COMPLETED,
+                payment: {
+                    trx_status: TransactionStatus.SUCCESS,
+                },
+            },
+            include: {
+                items: {
+                    where: {
+                        is_active: true,
+                    },
+                },
+            },
+        });
     }
 }

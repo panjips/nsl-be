@@ -39,6 +39,7 @@ import {
     CateringPackageService,
     ReservationService,
     InventoryUsageService,
+    ReportService,
 } from "services";
 import {
     ILogger,
@@ -102,5 +103,6 @@ container.bind<PaymentService>(TYPES.PaymentService).to(PaymentService);
 container.bind<CateringPackageService>(TYPES.CateringPackageService).to(CateringPackageService);
 container.bind<ReservationService>(TYPES.ReservationService).to(ReservationService);
 container.bind<InventoryUsageService>(TYPES.InventoryUsageService).to(InventoryUsageService);
+container.bind<ReportService>(TYPES.ReportService).to(ReportService);
 
 export { container };

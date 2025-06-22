@@ -11,11 +11,32 @@ export class ReservationRepository {
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {}
 
-    async findAll(): Promise<Reservation[]> {
+    async findAll(status?: string, startDate?: string, endDate?: string): Promise<Reservation[]> {
+        const whereClause: any = {
+            is_active: true,
+        };
+
+        if (status) {
+            whereClause.status = status;
+        }
+
+        if (startDate && endDate) {
+            whereClause.event_date = {
+                gte: startDate,
+                lte: endDate,
+            };
+        } else if (startDate) {
+            whereClause.event_date = {
+                gte: startDate,
+            };
+        } else if (endDate) {
+            whereClause.event_date = {
+                lte: endDate,
+            };
+        }
+
         return this.prisma.reservation.findMany({
-            where: {
-                is_active: true,
-            },
+            where: whereClause,
             include: {
                 orderCaterings: {
                     where: {
@@ -321,5 +342,109 @@ export class ReservationRepository {
             existingReservations,
             maxReservationsPerDay,
         };
+    }
+
+    async getTotalRevenueReservations(startDate: Date, endDate: Date) {
+        const result = await this.prisma.reservation.aggregate({
+            _sum: {
+                total_price: true,
+            },
+            where: {
+                is_active: true,
+                status: ReservationStatus.COMPLETED,
+                event_date: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+        });
+        return result._sum.total_price || 0;
+    }
+
+    async getReservationCount(startDate: Date, endDate: Date) {
+        const result = await this.prisma.reservation.count({
+            where: {
+                is_active: true,
+                status: ReservationStatus.COMPLETED,
+                event_date: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+        });
+        return result;
+    }
+
+    async getReservationReport(startDate: Date, endDate: Date) {
+        return this.prisma.reservation.findMany({
+            where: {
+                is_active: true,
+                status: ReservationStatus.COMPLETED,
+                event_date: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+            include: {
+                user: {
+                    select: {
+                        name: true,
+                        email: true,
+                        phone_number: true,
+                    },
+                },
+                orderCaterings: {
+                    where: {
+                        is_active: true,
+                    },
+                    include: {
+                        cateringPackage: {
+                            select: {
+                                name: true,
+                                description: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                event_date: "asc",
+            },
+        });
+
+        // Report from catering packages
+        // return this.prisma.cateringPackage.findMany({
+        //     where: {
+        //         is_active: true,
+        //         orderCaterings: {
+        //             every: {
+        //                 reservation: {
+        //                     is_active: true,
+        //                     event_date: {
+        //                         gte: startDate,
+        //                         lte: endDate,
+        //                     },
+        //                 },
+        //             },
+        //         },
+        //     },
+        //     include: {
+        //         orderCaterings: {
+        //             include: {
+        //                 reservation: {
+        //                     include: {
+        //                         user: {
+        //                             select: {
+        //                                 name: true,
+        //                                 email: true,
+        //                                 phone_number: true,
+        //                             },
+        //                         },
+        //                     },
+        //                 },
+        //             },
+        //         },
+        //     },
+        // });
     }
 }
