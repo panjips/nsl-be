@@ -76,4 +76,4 @@ networks:
   nsl-network:
     driver: bridge
   cloudflare-tunnel:
-    driver: external
+    external: true
