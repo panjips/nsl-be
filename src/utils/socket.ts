@@ -13,7 +13,14 @@ export class SocketService {
     initialize(server: HttpServer): void {
         this.io = new SocketIOServer(server, {
             cors: {
-                origin: "*",
+                credentials: true,
+                origin: [
+                    "http://localhost:8000",
+                    "http://127.0.0.1:8000",
+                    "http://localhost:5173",
+                    "http://127.0.0.1:9090",
+                    "https://nsl.panjip.my.id",
+                ],
             },
         });
 
