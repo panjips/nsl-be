@@ -4,6 +4,7 @@ import { ILogger, CustomError } from "utils";
 import { ProductRecipeRepository, ProductRepository, InventoryRepository } from "repositories";
 import { BaseService } from "./base.service";
 import { CreateProductRecipe, UpdateProductRecipe } from "models";
+import { SugarType } from "@prisma/client";
 
 @injectable()
 export class ProductRecipeService extends BaseService {
@@ -18,14 +19,73 @@ export class ProductRecipeService extends BaseService {
 
     async getAllProductRecipes() {
         try {
-            const productRecipes = await this.productRecipeRepository.findAll();
-            return this.excludeMetaFields(productRecipes);
+            const productRecipes = await this.productRecipeRepository.findAllWithInventoryAndProduct();
+            return this.transformProductRecipes(productRecipes);
         } catch (error) {
             this.logger.error(
                 `Error getting all product recipes: ${error instanceof Error ? error.message : String(error)}`,
             );
             throw new CustomError("Failed to retrieve product recipes", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    async transformProductRecipes(productRecipes: any[]) {
+        const transformedRecipes: any[] = [];
+
+        for (const recipe of productRecipes) {
+            const existingProduct = transformedRecipes.find((r) => {
+                return r.id === recipe.product.id && this.checkIsHaveSameSugarType(r.recipes, recipe.sugar_type);
+            });
+
+            if (existingProduct) {
+                const recipeWithInventory = {
+                    id: recipe.id,
+                    product_id: recipe.product_id,
+                    inventory_id: recipe.inventory_id,
+                    quantity_used: recipe.quantity_used,
+                    sugar_type: recipe.sugar_type,
+                    is_active: recipe.is_active,
+                    inventory: {
+                        id: recipe.inventory.id,
+                        name: recipe.inventory.name,
+                        quantity: recipe.inventory.quantity,
+                        unit: recipe.inventory.unit,
+                        min_quantity: recipe.inventory.min_quantity,
+                        is_active: recipe.inventory.is_active,
+                    },
+                };
+
+                existingProduct.recipes.push(recipeWithInventory);
+            } else {
+                transformedRecipes.push({
+                    ...recipe.product,
+                    recipes: [
+                        {
+                            id: recipe.id,
+                            product_id: recipe.product_id,
+                            inventory_id: recipe.inventory_id,
+                            quantity_used: recipe.quantity_used,
+                            sugar_type: recipe.sugar_type,
+                            is_active: recipe.is_active,
+                            inventory: {
+                                id: recipe.inventory.id,
+                                name: recipe.inventory.name,
+                                quantity: recipe.inventory.quantity,
+                                unit: recipe.inventory.unit,
+                                min_quantity: recipe.inventory.min_quantity,
+                                is_active: recipe.inventory.is_active,
+                            },
+                        },
+                    ],
+                });
+            }
+        }
+
+        return transformedRecipes;
+    }
+
+    checkIsHaveSameSugarType(data: any[], sugarType: string) {
+        return data.every((item) => item.sugar_type === sugarType);
     }
 
     async getProductRecipeById(id: number) {
@@ -47,7 +107,7 @@ export class ProductRecipeService extends BaseService {
         }
     }
 
-    async getProductRecipesByProductId(productId: number) {
+    async getProductRecipesByProductId(productId: number, sugarType: string | undefined) {
         try {
             const product = await this.productRepository.findById(productId);
             if (!product) {
@@ -55,6 +115,20 @@ export class ProductRecipeService extends BaseService {
             }
 
             const productRecipes = await this.productRecipeRepository.findByProductId(productId);
+
+            if (!productRecipes) {
+                throw new CustomError("Product recipes not found", HttpStatus.NOT_FOUND);
+            }
+
+            if (sugarType) {
+                const filteredRecipes = productRecipes.recipes.filter((recipe) => recipe.sugar_type === sugarType);
+
+                productRecipes.recipes = filteredRecipes;
+                productRecipes.sugar_type = sugarType as SugarType;
+
+                return this.excludeMetaFields(productRecipes);
+            }
+
             return this.excludeMetaFields(productRecipes);
         } catch (error) {
             if (error instanceof CustomError) throw error;
@@ -109,10 +183,9 @@ export class ProductRecipeService extends BaseService {
         }
     }
 
-    // Add this method to the existing service class
-
     async bulkCreateProductRecipes(data: {
         product_id: number;
+        sugar_type: string;
         recipes: { inventory_id: number; quantity_used: number }[];
     }) {
         try {
@@ -129,11 +202,17 @@ export class ProductRecipeService extends BaseService {
                 }
             }
 
-            await this.productRecipeRepository.deleteByProductId(data.product_id);
+            await this.productRecipeRepository.deleteByProductIdAndSugarType(
+                data.product_id,
+                data.sugar_type as SugarType,
+            );
 
-            await this.productRecipeRepository.createMany(data.product_id, data.recipes);
+            await this.productRecipeRepository.createMany(data.product_id, data.sugar_type as SugarType, data.recipes);
 
-            const productWithRecipes = await this.productRecipeRepository.findByProductId(data.product_id);
+            const productWithRecipes = await this.productRecipeRepository.findByProductIdAndSugarType(
+                data.product_id,
+                data.sugar_type as SugarType,
+            );
             if (!productWithRecipes) {
                 throw new CustomError("No recipes found for the product", HttpStatus.NOT_FOUND);
             }

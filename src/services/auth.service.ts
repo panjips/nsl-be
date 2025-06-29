@@ -36,6 +36,30 @@ export class AuthService extends BaseService {
         this.logger.info("Token management queue initialized");
     }
 
+    public async openStore(isOpen: boolean): Promise<void> {
+        try {
+            await this.authRepository.openStore(isOpen);
+            this.logger.info(`Store status updated to ${isOpen ? "open" : "closed"}`);
+        } catch (error) {
+            this.logger.error(
+                `Failed to update store status: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to update store status", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public async getStoreStatus(): Promise<boolean> {
+        try {
+            const storeStatus = await this.authRepository.getStoreStatus();
+            return storeStatus.isOpen;
+        } catch (error) {
+            this.logger.error(
+                `Failed to retrieve store status: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to retrieve store status", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public async register(data: RegisterDTOType) {
         const { id } = await this.roleRepository.getRoleById(Role.PELANGGAN);
         const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -117,6 +141,12 @@ export class AuthService extends BaseService {
         if (!tokenRecord) {
             throw new Error("Invalid refresh token");
         }
+
+        this.jwtService.verifyRefreshToken(refreshToken);
+        if (tokenRecord.expires_at < new Date()) {
+            throw new CustomError("Refresh token expired", HttpStatus.UNAUTHORIZED);
+        }
+
         const user = tokenRecord.user;
 
         return {

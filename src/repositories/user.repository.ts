@@ -112,7 +112,7 @@ export class UserRepository {
 
     async getUserByEmail(email: string) {
         try {
-            const user = await this.prisma.user.findFirstOrThrow({
+            const user = await this.prisma.user.findFirst({
                 where: {
                     email,
                 },
@@ -121,7 +121,7 @@ export class UserRepository {
                 },
             });
 
-            this.logger.info(`Fetched user with email ${user.email} successfully`);
+            this.logger.info(`Fetched user with email ${user?.email} successfully`);
             return user;
         } catch (error) {
             if (error instanceof PrismaClientKnownRequestError) {

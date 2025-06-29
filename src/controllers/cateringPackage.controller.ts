@@ -80,7 +80,7 @@ export class CateringPackageController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateCateringPackageDTO))
+    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(CreateCateringPackageDTO))
     public async createCateringPackage(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const pkg = await this.cateringPackageService.createCateringPackage(req.body);
@@ -95,7 +95,7 @@ export class CateringPackageController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateCateringPackageDTO))
+    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(UpdateCateringPackageDTO))
     public async updateCateringPackage(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -112,7 +112,7 @@ export class CateringPackageController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async deleteCateringPackage(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

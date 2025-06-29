@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     env_file:
-      - .env.development
+      - .env
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
@@ -29,7 +29,7 @@ services:
     restart: always
     container_name: nsl-redis
     env_file:
-      - .env.development
+      - .env
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
@@ -46,7 +46,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env.development
+      - .env
     depends_on:
       - db
     networks:

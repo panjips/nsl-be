@@ -21,6 +21,9 @@ export class InventoryUsageRepository {
                 inventory: true,
                 order: true,
             },
+            orderBy: {
+                created_at: "desc",
+            },
         });
     }
 

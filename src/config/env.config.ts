@@ -34,6 +34,9 @@ const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
 const MIDTRANS_CLIENT_KEY = process.env.MIDTRANS_CLIENT_KEY || "";
 const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
 
+console.log(NODE_ENV)
+console.log(REDIS_HOST, REDIS_PORT, REDIS_PASSWORD);
+
 export const config = {
     port: PORT,
     dbUrl: DB_URL,

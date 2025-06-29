@@ -1,6 +1,6 @@
 import { HttpStatus, TYPES } from "constant";
 import { inject } from "inversify";
-import { controller, response, next, BaseHttpController, httpGet, request } from "inversify-express-utils";
+import { controller, response, next, BaseHttpController, httpGet, request, queryParam } from "inversify-express-utils";
 import type { NextFunction, Response, Request } from "express";
 import { ApiResponse, ILogger } from "utils";
 import { ReportService } from "services";
@@ -16,12 +16,14 @@ export class DashboardController extends BaseHttpController {
 
     @httpGet("/statistics")
     public async getDashboardStatistics(
+        @queryParam("startDate") startDate: string | undefined,
+        @queryParam("endDate") endDate: string | undefined,
         @request() req: Request,
         @response() res: Response,
         @next() next: NextFunction,
     ) {
         try {
-            const statistics = await this.reportService.getDashboardStatistics(req.user);
+            const statistics = await this.reportService.getDashboardStatistics(req.user, startDate, endDate);
             return res
                 .status(HttpStatus.OK)
                 .json(ApiResponse.success("Dashboard statistics retrieved successfully", statistics));

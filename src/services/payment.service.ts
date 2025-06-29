@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { HttpStatus, TYPES } from "constant";
-import { ILogger, CustomError, MidtransService } from "utils";
+import { ILogger, CustomError, MidtransService, MailService } from "utils";
 import { PaymentRepository, OrderRepository } from "repositories";
 import { BaseService } from "./base.service";
 import { CreateOrderAddonItem, CreatePayment, MidtransItems, OrderMapping, UpdatePayment } from "models";
@@ -20,6 +20,7 @@ export class PaymentService extends BaseService {
         @inject(TYPES.InventoryUsageService) private readonly inventoryUsageService: InventoryUsageService,
         @inject(TYPES.Logger) private readonly logger: ILogger,
         @inject(TYPES.SocketService) private readonly ws: Server,
+        @inject(TYPES.MailService) private readonly ms: MailService,
         @inject(TYPES.MidtransService) private readonly midtrans: MidtransService,
     ) {
         super();
@@ -152,14 +153,10 @@ export class PaymentService extends BaseService {
 
             const order_id = this.toOrderId(data.order_id).toString();
 
-            // console.log(data.order_id)
-
             const localHash = crypto
                 .createHash("sha512")
                 .update(`${data.order_id}${data.status_code}${data.gross_amount}${serverKey}`)
                 .digest("hex");
-
-            console.log(localHash);
 
             if (data.signature_key !== localHash) {
                 this.logger.warn(
@@ -217,6 +214,11 @@ export class PaymentService extends BaseService {
                 if (!order) {
                     this.logger.warn(`Order not found for payment ${order_id}`);
                     throw new CustomError("Order not found", HttpStatus.NOT_FOUND);
+                }
+
+                if (order.user?.role.name === "Pelanggan") {
+                    // I want to send invoice to customer via email
+                    console.log(order.items);
                 }
 
                 const update = await this.orderRepository.update(Number(order_id), {
@@ -329,6 +331,7 @@ export class PaymentService extends BaseService {
 
                 return {
                     order_id: order.id,
+                    selected_sugar_type: item.selected_sugar_type,
                     product_id: item.product_id,
                     quantity: item.quantity,
                     price: item.price,

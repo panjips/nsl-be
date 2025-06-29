@@ -95,4 +95,22 @@ export class ProductRepository {
         this.logger.info(`Product ${id} soft deleted`);
         return !!data;
     }
+
+    async getProductSugarType(productId: number) {
+        return await this.prisma.product.findMany({
+            select: {
+                recipes: {
+                    distinct: ["sugar_type"],
+                    select: {
+                        sugar_type: true,
+                    },
+                    
+                },
+            },
+            where: {
+                id: productId,
+                is_active: true,
+            },
+        });
+    }
 }

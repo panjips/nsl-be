@@ -26,16 +26,30 @@ export class ReservationService extends BaseService {
         super();
     }
 
-    async getAllReservations() {
+    async getAllReservations(status?: ReservationStatus | ReservationStatus[]) {
         try {
-            const cachedReservations = await this.redisService.get(RedisKey.RESERVATION_ALL);
+            let cacheKey = RedisKey.RESERVATION_ALL;
+            if (status) {
+                const statusString = Array.isArray(status) ? status.sort().join(",") : status;
+                cacheKey = `${RedisKey.RESERVATION_ALL}:${statusString}`;
+            }
+
+            const cachedReservations = await this.redisService.get(cacheKey);
             if (cachedReservations) {
+                this.logger.info(`Retrieved reservations from cache with key: ${cacheKey}`);
                 return JSON.parse(cachedReservations as string);
             }
 
-            const reservations = await this.reservationRepository.findAll();
+            let reservations;
+            if (status) {
+                reservations = await this.reservationRepository.findByStatus(status);
+            } else {
+                reservations = await this.reservationRepository.findAll();
+            }
+
             const data = this.excludeMetaFields(reservations);
-            await this.redisService.set(RedisKey.RESERVATION_ALL, JSON.stringify(data));
+
+            await this.redisService.set(cacheKey, JSON.stringify(data), 300);
             return data;
         } catch (error) {
             this.logger.error(
@@ -263,7 +277,7 @@ export class ReservationService extends BaseService {
         }
     }
 
-    async deleteReservation(id: number) {
+    async deleteReservation(id: number, user?: any) {
         try {
             const reservation = await this.reservationRepository.findById(id);
             if (!reservation) {
@@ -275,6 +289,13 @@ export class ReservationService extends BaseService {
                 reservation.status !== ReservationStatus.CANCELLED
             ) {
                 throw new CustomError("Only pending or cancelled reservations can be deleted", HttpStatus.BAD_REQUEST);
+            }
+
+            if (user && user.role === "Pelanggan") {
+                const userReservation = await this.reservationRepository.findByUserId(user.id);
+                if (!userReservation.some((res) => res.id === id)) {
+                    throw new CustomError("You are not authorized to delete this reservation", HttpStatus.FORBIDDEN);
+                }
             }
 
             await this.orderCateringRepository.deleteByReservationId(id);

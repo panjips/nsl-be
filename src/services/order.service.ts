@@ -10,7 +10,7 @@ import {
     UserRepository,
 } from "repositories";
 import { BaseService } from "./base.service";
-import { OrderStatus, OrderType, PaymentType } from "@prisma/client";
+import { OrderStatus, OrderType, PaymentType, SugarType } from "@prisma/client";
 import { CreateOrder, CreateOrderAddonItem, CreateOrderProductItem, MidtransItems } from "models";
 import { Decimal } from "@prisma/client/runtime/library";
 import { CreateOrderDTOType } from "dtos";
@@ -205,6 +205,7 @@ export class OrderService extends BaseService {
                 totalAmount = totalAmount.plus(itemSubtotal);
                 validatedItems.push({
                     ...item,
+                    selected_sugar_type: (item.sugar_type as SugarType) || "NORMAL",
                     cost: product.cost,
                     product_id: product.id,
                     quantity: item.quantity || 1,
@@ -233,6 +234,7 @@ export class OrderService extends BaseService {
 
                 const orderItem = await this.orderProductItemRepository.create({
                     product_id: item.product_id,
+                    selected_sugar_type: item.selected_sugar_type || "NORMAL",
                     cost: item.cost,
                     price: item.price,
                     quantity: item.quantity,
@@ -257,6 +259,7 @@ export class OrderService extends BaseService {
             const completeOrder = await this.orderRepository.findById(order.id);
 
             if (paymentType !== PaymentType.QRIS_MIDTRANS) {
+                console.log(validatedItems[0]);
                 await this.inventoryUsageService.createManyInventoryUsages(order.id, validatedItems);
                 await this.paymentService.createPayment(paymentType, completeOrder);
             } else {

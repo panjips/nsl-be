@@ -29,7 +29,7 @@ export class AddonController extends BaseHttpController {
     @httpGet("/")
     public async getAllAddons(@response() res: Response, @next() next: NextFunction) {
         try {
-            const addons = await this.addonService.getAllAddons();
+            const addons = await this.addonService.getAllAddonsAvailableStock();
             return res.status(HttpStatus.OK).json(ApiResponse.success("Addons retrieved successfully", addons));
         } catch (error) {
             this.logger.error("Error retrieving addons");
@@ -54,7 +54,12 @@ export class AddonController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateAddonDTO))
+    @httpPost(
+        "/",
+        TYPES.AuthMiddleware,
+        RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]),
+        ZodValidation(CreateAddonDTO),
+    )
     public async createAddon(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const addon = await this.addonService.createAddon(req.body);
@@ -65,7 +70,12 @@ export class AddonController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateAddonDTO))
+    @httpPut(
+        "/:id",
+        TYPES.AuthMiddleware,
+        RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]),
+        ZodValidation(UpdateAddonDTO),
+    )
     public async updateAddon(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -82,7 +92,7 @@ export class AddonController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async deleteAddon(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

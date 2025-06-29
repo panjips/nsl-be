@@ -1,11 +1,20 @@
-import { HttpStatus, TYPES } from "constant";
+import { HttpStatus, Role, TYPES } from "constant";
 import { inject } from "inversify";
-import { controller, cookies, httpPost, request, response, next, BaseHttpController } from "inversify-express-utils";
+import {
+    controller,
+    cookies,
+    httpPost,
+    request,
+    response,
+    next,
+    BaseHttpController,
+    httpGet,
+} from "inversify-express-utils";
 import type { AuthService } from "services";
 import type { NextFunction, Request, Response } from "express";
 import { ForgotPasswordDTO, LoginDTO, RegisterDTO, ResetPasswordDTO } from "dtos";
 import { type ILogger, ApiResponse, type JwtService, CustomError } from "utils";
-import { ZodValidation } from "middleware";
+import { RoleMiddlewareFactory, ZodValidation } from "middleware";
 
 @controller("/auth")
 export class AuthController extends BaseHttpController {
@@ -16,6 +25,39 @@ export class AuthController extends BaseHttpController {
         @inject(TYPES.JwtService) private readonly jwtService: JwtService,
     ) {
         super();
+    }
+
+    @httpGet("/open-store")
+    public async getStoreStatus(@response() res: Response, @next() next: NextFunction) {
+        try {
+            const isOpen = await this.authService.getStoreStatus();
+            this.logger.info(`Store status retrieved: ${isOpen ? "open" : "closed"}`);
+            return res
+                .status(HttpStatus.OK)
+                .json(ApiResponse.success("Store status retrieved successfully", { isOpen }));
+        } catch (error) {
+            this.logger.error(
+                `Failed to update store status: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            next(new CustomError("Failed to update store status", HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+    @httpPost("/open-store", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
+    public async openStore(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+        try {
+            const { isOpen } = req.body;
+            await this.authService.openStore(isOpen);
+            this.logger.info(`Store status updated to ${isOpen ? "open" : "closed"}`);
+            return res
+                .status(HttpStatus.OK)
+                .json(ApiResponse.success(`Store status updated to ${isOpen ? "open" : "closed"}`));
+        } catch (error) {
+            this.logger.error(
+                `Failed to update store status: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            next(new CustomError("Failed to update store status", HttpStatus.INTERNAL_SERVER_ERROR));
+        }
     }
 
     @httpPost("/register", ZodValidation(RegisterDTO))
@@ -146,6 +188,7 @@ export class AuthController extends BaseHttpController {
     @httpPost("/logout", TYPES.AuthMiddleware)
     public async logout(@cookies() cookies: { refreshToken: string }, @response() res: Response, next: NextFunction) {
         try {
+            console.log(cookies.refreshToken);
             if (!cookies.refreshToken) {
                 throw new CustomError("Refresh token not found", HttpStatus.UNAUTHORIZED);
             }
@@ -154,8 +197,8 @@ export class AuthController extends BaseHttpController {
             res.clearCookie("refreshToken", {
                 httpOnly: true,
                 secure: true,
-                sameSite: "strict",
-                path: "/auth",
+                sameSite: "none",
+                path: "/",
             });
 
             this.logger.info("User logged out successfully");

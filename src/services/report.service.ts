@@ -45,10 +45,14 @@ interface AddonSalesReportItem {
 @injectable()
 export class ReportService extends BaseService {
     constructor(
-        @inject(TYPES.OrderRepository) private readonly orderRepository: OrderRepository,
-        @inject(TYPES.InventoryUsageRepository) private readonly inventoryUsageRepository: InventoryUsageRepository,
-        @inject(TYPES.PurchaseRepository) private readonly purchaseRepository: PurchaseRepository,
-        @inject(TYPES.ReservationRepository) private readonly reservationRepository: ReservationRepository,
+        @inject(TYPES.OrderRepository)
+        private readonly orderRepository: OrderRepository,
+        @inject(TYPES.InventoryUsageRepository)
+        private readonly inventoryUsageRepository: InventoryUsageRepository,
+        @inject(TYPES.PurchaseRepository)
+        private readonly purchaseRepository: PurchaseRepository,
+        @inject(TYPES.ReservationRepository)
+        private readonly reservationRepository: ReservationRepository,
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {
         super();
@@ -163,7 +167,10 @@ export class ReportService extends BaseService {
             }
         }
 
-        return { productSales: Array.from(productSalesMap.values()), addonSales: Array.from(addonSalesMap.values()) };
+        return {
+            productSales: Array.from(productSalesMap.values()),
+            addonSales: Array.from(addonSalesMap.values()),
+        };
     }
 
     private processInventoryUsageReport(inventoryUsageData: any[]): InventoryUsageReport[] {
@@ -207,7 +214,12 @@ export class ReportService extends BaseService {
         return reservations.map((reservation) => {
             const orderCateringsMap = new Map<
                 string,
-                { catering_package_id: number; price: number; quantity: number; name: string }
+                {
+                    catering_package_id: number;
+                    price: number;
+                    quantity: number;
+                    name: string;
+                }
             >();
 
             if (reservation.orderCaterings) {
@@ -249,7 +261,10 @@ export class ReportService extends BaseService {
             const { startDate, endDate } = this.getDateRange(type, startDateCustom, endDateCustom);
 
             this.logger.info(
-                `Getting product sales report for dates: ${format(startDate, "dd-MM-yyyy")} to ${format(endDate, "dd-MM-yyyy")}`,
+                `Getting product sales report for dates: ${format(
+                    startDate,
+                    "dd-MM-yyyy",
+                )} to ${format(endDate, "dd-MM-yyyy")}`,
             );
 
             const sales = await this.orderRepository.getSalesReport({
@@ -277,7 +292,10 @@ export class ReportService extends BaseService {
             const { startDate, endDate } = this.getDateRange(type, startDateCustom, endDateCustom);
 
             this.logger.info(
-                `Getting inventory usage report for dates: ${format(startDate, "dd-MM-yyyy")} to ${format(endDate, "dd-MM-yyyy")}`,
+                `Getting inventory usage report for dates: ${format(
+                    startDate,
+                    "dd-MM-yyyy",
+                )} to ${format(endDate, "dd-MM-yyyy")}`,
             );
 
             const inventoryUsage = await this.inventoryUsageRepository.getInventoryUsageReport(startDate, endDate);
@@ -300,7 +318,10 @@ export class ReportService extends BaseService {
             const { startDate, endDate } = this.getDateRange(type, startDateCustom, endDateCustom);
 
             this.logger.info(
-                `Getting inventory purchase report for dates: ${format(startDate, "dd-MM-yyyy")} to ${format(endDate, "dd-MM-yyyy")}`,
+                `Getting inventory purchase report for dates: ${format(
+                    startDate,
+                    "dd-MM-yyyy",
+                )} to ${format(endDate, "dd-MM-yyyy")}`,
             );
 
             const inventoryPurchase = await this.purchaseRepository.getInventoryPurchaseReport(startDate, endDate);
@@ -323,7 +344,10 @@ export class ReportService extends BaseService {
             const { startDate, endDate } = this.getDateRange(type, startDateCustom, endDateCustom);
 
             this.logger.info(
-                `Getting reservation catering report for dates: ${format(startDate, "dd-MM-yyyy")} to ${format(endDate, "dd-MM-yyyy")}`,
+                `Getting reservation catering report for dates: ${format(
+                    startDate,
+                    "dd-MM-yyyy",
+                )} to ${format(endDate, "dd-MM-yyyy")}`,
             );
 
             const cateringReport = await this.reservationRepository.getReservationReport(startDate, endDate);
@@ -341,7 +365,10 @@ export class ReportService extends BaseService {
             const { startDate, endDate } = this.getDateRange(type, startDateCustom, endDateCustom);
 
             this.logger.info(
-                `Getting revenue report for dates: ${format(startDate, "dd-MM-yyyy")} to ${format(endDate, "dd-MM-yyyy")}`,
+                `Getting revenue report for dates: ${format(
+                    startDate,
+                    "dd-MM-yyyy",
+                )} to ${format(endDate, "dd-MM-yyyy")}`,
             );
 
             const [revenueReservations, countReservations, revenueOrders, countOrders] = await Promise.all([
@@ -372,13 +399,12 @@ export class ReportService extends BaseService {
         }
     }
 
-    async getDashboardStatistics(user: any) {
+    async getDashboardStatistics(user: any, startDateCustom?: string, endDateCustom?: string) {
         try {
-            const today = new Date();
-            const startDate = subDays(today, 29);
+            const today = endDateCustom ? new Date(endDateCustom) : new Date();
+            const startDate = startDateCustom ? new Date(startDateCustom) : subDays(today, 29);
 
             const data: Record<string, { qty_order: number; total_amount: number; total_cost?: number }> = {};
-
             if (user.role === "Pelanggan") {
                 const orders = await this.orderRepository.getOrderStatistics(user.id);
                 orders.forEach((item: any) => {
@@ -390,7 +416,10 @@ export class ReportService extends BaseService {
                     data[formatted].total_amount += Number(item.total_amount);
                 });
             } else if (user.role === "Pemilik" || user.role === "Kasir") {
-                const orders = await this.orderRepository.getSalesReport({ startDate, endDate: today });
+                const orders = await this.orderRepository.getSalesReport({
+                    startDate,
+                    endDate: today,
+                });
                 orders.forEach((item: any) => {
                     const formatted = format(new Date(item.created_at), "dd-MM-yyyy");
                     if (!data[formatted]) {
@@ -411,11 +440,28 @@ export class ReportService extends BaseService {
                         data[formatted].total_cost = (data[formatted].total_cost || 0) + totalCost;
                     }
                 });
+            } else if (user.role === "Staf") {
+                const purchase = await this.purchaseRepository.getPurchaseReportByRangeDate(startDate, today);
+
+                purchase.forEach((item: any) => {
+                    const formatted = format(new Date(item.created_at), "dd-MM-yyyy");
+                    if (!data[formatted]) {
+                        data[formatted] = { qty_order: 0, total_amount: 0, total_cost: 0 };
+                    }
+                    data[formatted].qty_order += 1;
+                    data[formatted].total_amount += Number(item.total);
+
+                });
             } else {
                 throw new CustomError("Unauthorized role for dashboard statistics", HttpStatus.FORBIDDEN);
             }
 
-            const transformData: { date: string; qty_order: number; total_amount: number; total_cost?: number }[] = [];
+            const transformData: {
+                date: string;
+                qty_order: number;
+                total_amount: number;
+                total_cost?: number;
+            }[] = [];
             for (let d = startDate; d <= today; d = addDays(d, 1)) {
                 const formatted = format(d, "dd-MM-yyyy");
                 transformData.push({
@@ -465,7 +511,11 @@ export class ReportService extends BaseService {
                 });
             });
 
-            const transformData: { name: string; quantity: number; type: "Addon" | "Product" }[] = [];
+            const transformData: {
+                name: string;
+                quantity: number;
+                type: "Addon" | "Product";
+            }[] = [];
 
             for (const [key, value] of Object.entries(products)) {
                 transformData.push({

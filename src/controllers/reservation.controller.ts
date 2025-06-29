@@ -29,14 +29,40 @@ export class ReservationController extends BaseHttpController {
     }
 
     @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
-    public async getAllReservations(@response() res: Response, @next() next: NextFunction) {
+    public async getAllReservations(
+        @queryParam("status") status: string | undefined,
+        @response() res: Response,
+        @next() next: NextFunction,
+    ) {
         try {
-            const reservations = await this.reservationService.getAllReservations();
+            let statusArray: ReservationStatus[] | undefined = undefined;
+
+            if (status) {
+                statusArray = status
+                    .split(",")
+                    .map((s) => s.trim().toUpperCase())
+                    .filter((s) =>
+                        Object.values(ReservationStatus).includes(s as ReservationStatus),
+                    ) as ReservationStatus[];
+
+                this.logger.info(`Filtering reservations by statuses: ${statusArray.join(", ")}`);
+
+                if (statusArray.length === 0) {
+                    this.logger.warn(`No valid reservation statuses provided in query: ${status}`);
+                    return res
+                        .status(HttpStatus.OK)
+                        .json(ApiResponse.success("No reservations match the provided status filter", []));
+                }
+            }
+
+            const reservations = await this.reservationService.getAllReservations(statusArray);
             return res
                 .status(HttpStatus.OK)
                 .json(ApiResponse.success("Reservations retrieved successfully", reservations));
         } catch (error) {
-            this.logger.error("Error retrieving reservations");
+            this.logger.error(
+                `Error retrieving reservations: ${error instanceof Error ? error.message : String(error)}`,
+            );
             next(error);
         }
     }
@@ -63,7 +89,7 @@ export class ReservationController extends BaseHttpController {
         }
     }
 
-    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.PELANGGAN]))
     public async getReservationById(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -81,7 +107,7 @@ export class ReservationController extends BaseHttpController {
         }
     }
 
-    @httpGet("/user/:userId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/user/:userId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.PELANGGAN]))
     public async getReservationsByUserId(
         @request() req: Request,
         @response() res: Response,
@@ -165,12 +191,12 @@ export class ReservationController extends BaseHttpController {
                 throw new CustomError("Invalid reservation ID", HttpStatus.BAD_REQUEST);
             }
 
-            if (req.user?.role !== Role.PEMILIK && req.user?.role !== Role.KASIR) {
-                const reservation = await this.reservationService.getReservationById(id);
-                if (reservation.user.id !== req.user?.id) {
-                    throw new CustomError("You are not authorized to update this reservation", HttpStatus.FORBIDDEN);
-                }
-            }
+            // if (req.user?.role !== Role.PEMILIK && req.user?.role !== Role.KASIR) {
+            //     const reservation = await this.reservationService.getReservationById(id);
+            //     if (reservation.user.id !== req.user?.id) {
+            //         throw new CustomError("You are not authorized to update this reservation", HttpStatus.FORBIDDEN);
+            //     }
+            // }
 
             const updatedReservation = await this.reservationService.updateReservation(id, req.body);
             return res
@@ -182,7 +208,7 @@ export class ReservationController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.PELANGGAN]))
     public async deleteReservation(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

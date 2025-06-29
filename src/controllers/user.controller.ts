@@ -28,7 +28,18 @@ export class UserController extends BaseHttpController {
         super();
     }
 
-    @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpPut("/self")
+    public async selfUpdate(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+        try {
+            const user = await this.userService.updateUser(Number(req.user?.id), req.body);
+            return res.status(HttpStatus.OK).json(ApiResponse.success("User updated successfully", user));
+        } catch (error) {
+            this.logger.error("Error updating user");
+            next(error);
+        }
+    }
+
+    @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async getUser(@queryParam("type") type: string, @response() res: Response, @next() next: NextFunction) {
         try {
             if (type && !["employee", "customer"].includes(type)) {
@@ -45,7 +56,7 @@ export class UserController extends BaseHttpController {
         }
     }
 
-    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.PELANGGAN, Role.KASIR]))
+    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF, Role.PELANGGAN, Role.KASIR]))
     public async getUserById(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             if (isNaN(Number(req.params.id))) {
@@ -56,7 +67,7 @@ export class UserController extends BaseHttpController {
                 throw new CustomError("User ID is required", HttpStatus.BAD_REQUEST);
             }
 
-            if (req.user?.id !== Number(req.params.id) && req.user?.role !== Role.PEMILIK) {
+            if ((req.user?.id !== Number(req.params.id) && req.user?.role !== Role.PEMILIK && req.user?.role !== Role.STAF)) {
                 throw new CustomError("You are not authorized to access this user", HttpStatus.FORBIDDEN);
             }
 
@@ -68,7 +79,7 @@ export class UserController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateUserDTO))
+    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(CreateUserDTO))
     public async createUser(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             await this.userService.createUser(req.body);
@@ -79,7 +90,7 @@ export class UserController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async updateUser(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             if (isNaN(Number(req.params.id))) {
@@ -90,7 +101,7 @@ export class UserController extends BaseHttpController {
                 throw new CustomError("User ID is required", HttpStatus.BAD_REQUEST);
             }
 
-            if (req.user?.id !== Number(req.params.id) && req.user?.role !== Role.PEMILIK) {
+            if ((req.user?.id !== Number(req.params.id) && req.user?.role !== Role.PEMILIK && req.user?.role !== Role.STAF)) {
                 throw new CustomError("You are not authorized to access this user", HttpStatus.FORBIDDEN);
             }
 
@@ -102,7 +113,7 @@ export class UserController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async deleteUser(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             if (isNaN(Number(req.params.id))) {
@@ -113,7 +124,7 @@ export class UserController extends BaseHttpController {
                 throw new CustomError("User ID is required", HttpStatus.BAD_REQUEST);
             }
 
-            if (req.user?.id !== Number(req.params.id) && req.user?.role !== Role.PEMILIK) {
+            if ((req.user?.id !== Number(req.params.id) && req.user?.role !== Role.PEMILIK && req.user?.role !== Role.STAF)) {
                 throw new CustomError("You are not authorized to access this user", HttpStatus.FORBIDDEN);
             }
 

@@ -130,39 +130,43 @@ export class ReservationRepository {
         });
     }
 
-    async findByStatus(status: ReservationStatus): Promise<Reservation[]> {
-        return this.prisma.reservation.findMany({
-            where: {
-                status,
+    async findByStatus(status: ReservationStatus | ReservationStatus[]): Promise<Reservation[]> {
+        try {
+            const whereCondition = {
                 is_active: true,
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        phone_number: true,
+                status: Array.isArray(status) ? { in: status } : status,
+            };
+
+            return await this.prisma.reservation.findMany({
+                where: whereCondition,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            phone_number: true,
+                        },
                     },
-                },
-                orderCaterings: {
-                    where: {
-                        is_active: true,
-                    },
-                    include: {
-                        cateringPackage: {
-                            select: {
-                                name: true,
-                                description: true,
-                            },
+                    orderCaterings: {
+                        where: {
+                            is_active: true,
+                        },
+                        include: {
+                            cateringPackage: true,
                         },
                     },
                 },
-            },
-            orderBy: {
-                event_date: "asc",
-            },
-        });
+                orderBy: {
+                    event_date: "asc",
+                },
+            });
+        } catch (error) {
+            this.logger.error(
+                `Error finding reservations by status: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw error;
+        }
     }
 
     async create(data: CreateReservation): Promise<Reservation> {

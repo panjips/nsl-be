@@ -1,3 +1,4 @@
+import { SugarType } from "@prisma/client";
 import { z } from "zod";
 
 export const CreateProductRecipeDTO = z.object({
@@ -15,6 +16,11 @@ export const UpdateProductRecipeDTO = z.object({
 
 export const BulkCreateProductRecipeDTO = z.object({
     product_id: z.number().int().positive("Product ID is required"),
+    sugar_type: z
+        .nativeEnum(SugarType, {
+            message: "Invalid sugar type",
+        })
+        .optional(),
     recipes: z
         .array(
             z.object({

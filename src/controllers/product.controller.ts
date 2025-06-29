@@ -69,7 +69,7 @@ export class ProductController extends BaseHttpController {
     @httpPost(
         "/",
         TYPES.AuthMiddleware,
-        RoleMiddlewareFactory([Role.PEMILIK]),
+        RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]),
         FormDataZodValidation(CreateProductDTO, "image"),
     )
     public async createProduct(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
@@ -85,7 +85,7 @@ export class ProductController extends BaseHttpController {
     @httpPut(
         "/:id",
         TYPES.AuthMiddleware,
-        RoleMiddlewareFactory([Role.PEMILIK]),
+        RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]),
         FormDataZodValidation(UpdateProductDTO, "image"),
     )
     public async updateProduct(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
@@ -104,7 +104,7 @@ export class ProductController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async deleteProduct(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

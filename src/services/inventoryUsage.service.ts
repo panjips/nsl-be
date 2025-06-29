@@ -10,6 +10,7 @@ import {
 import { CreateInventoryUsage, OrderMapping } from "models";
 import { BaseService } from "./base.service";
 import { Decimal } from "@prisma/client/runtime/library";
+import { SugarType } from "@prisma/client";
 
 @injectable()
 export class InventoryUsageService extends BaseService {
@@ -102,7 +103,13 @@ export class InventoryUsageService extends BaseService {
             const inventoryUsageMap = new Map<number, number>();
 
             for (const item of items) {
-                const productWithRecipe = await this.productRecipeRepository.findByProductId(item.product_id as number);
+                console.log("Ini Itemnya : ", item);
+                const productWithRecipe = await this.productRecipeRepository.findByProductIdAndSugarType(
+                    item.product_id as number,
+                    item.selected_sugar_type as SugarType,
+                );
+
+                console.log("Ini Product Recipe : ", productWithRecipe?.recipes);
                 if (!productWithRecipe || !productWithRecipe.recipes || productWithRecipe.recipes.length === 0) {
                     this.logger.warn(`No recipes found for product ID ${item.product_id}`);
                     continue;

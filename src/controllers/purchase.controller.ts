@@ -26,7 +26,7 @@ export class PurchaseController extends BaseHttpController {
         super();
     }
 
-    @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getAllPurchases(@response() res: Response, @next() next: NextFunction) {
         try {
             const purchases = await this.purchaseService.getAllPurchases();
@@ -36,7 +36,7 @@ export class PurchaseController extends BaseHttpController {
             next(error);
         }
     }
-    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getPurchaseById(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -53,7 +53,7 @@ export class PurchaseController extends BaseHttpController {
         }
     }
 
-    @httpGet("/invetory/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/invetory/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getPurchaseByInventoryId(
         @request() req: Request,
         @response() res: Response,
@@ -72,7 +72,7 @@ export class PurchaseController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]), ZodValidation(CreatePurchaseDTO))
+    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]), ZodValidation(CreatePurchaseDTO))
     public async createPurchase(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const purchase = await this.purchaseService.createPurchase(req.body);
@@ -83,7 +83,7 @@ export class PurchaseController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]), ZodValidation(UpdatePurchaseDTO))
+    @httpPut("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]), ZodValidation(UpdatePurchaseDTO))
     public async updatePurchase(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -100,7 +100,7 @@ export class PurchaseController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async deletePurchase(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

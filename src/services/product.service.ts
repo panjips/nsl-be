@@ -137,20 +137,31 @@ export class ProductService extends BaseService {
 
     async getAllProductsAvailableStock() {
         try {
-            // Get all products
             const products = await this.productRepository.findAll();
             const results = [];
 
             for (const product of products) {
                 try {
                     const productAvailability = await this.getProductAvailableStock(product.id);
-                    results.push(productAvailability);
+                    const productSugarType = await this.productRepository.getProductSugarType(product.id);
+
+                    const { recipes } = productSugarType[0];
+                    results.push({
+                        ...productAvailability,
+                        sugar_type: recipes.map((r) => r.sugar_type),
+                        possible_qty: productAvailability.possible_qty,
+                    });
                 } catch (error) {
                     this.logger.error(
                         `Error calculating stock for product ${product.id}: ${error instanceof Error ? error.message : String(error)}`,
                     );
-
-                    results.push(this.excludeMetaFields({ ...product, possible_qty: 0 }));
+                    const productSugarType = await this.productRepository.getProductSugarType(product.id);
+                    const { recipes } = productSugarType[0];
+                    results.push({
+                        ...this.excludeMetaFields(product),
+                        sugar_type: recipes.map((r) => r.sugar_type),
+                        possible_qty: 0,
+                    });
                 }
             }
 

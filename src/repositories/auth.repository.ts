@@ -10,6 +10,32 @@ export class AuthRepository {
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {}
 
+    public async openStore(isOpen: boolean) {
+        try {
+            return await this.prisma.settings.update({
+                where: {
+                    id: 1,
+                },
+                data: {
+                    isOpen: isOpen,
+                },
+            });
+        } catch (error) {
+            this.logger.error(
+                `Failed to update store status: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new Error("Failed to update store status");
+        }
+    }
+
+    public getStoreStatus() {
+        return this.prisma.settings.findFirstOrThrow({
+            where: {
+                id: 1,
+            },
+        });
+    }
+
     public async login(identifier: string) {
         const user = await this.prisma.user.findFirst({
             where: {

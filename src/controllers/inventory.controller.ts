@@ -85,7 +85,7 @@ export class InventoryController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateInventoryDTO))
+    @httpPost("/", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(CreateInventoryDTO))
     public async createInventory(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const inventory = await this.inventoryService.createInventory(req.body);
@@ -121,7 +121,7 @@ export class InventoryController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async deleteInventory(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);

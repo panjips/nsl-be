@@ -43,6 +43,12 @@ enum ReservationStatus {
   CANCELLED
 }
 
+enum SugarType {
+  NORMAL
+  LESS_SUGAR
+  NO_SUGAR
+}
+
 model Role {
   id         Int      @id @default(autoincrement())
   name       String   @db.VarChar(255)
@@ -182,6 +188,7 @@ model ProductRecipe {
   product_id    Int
   inventory_id  Int
   quantity_used Decimal    @db.Decimal(10, 2)
+  sugar_type    SugarType? 
   is_active     Boolean    @default(true)
   created_at    DateTime   @default(now())
   updated_at    DateTime   @updatedAt
@@ -232,6 +239,7 @@ model OrderProductItem {
   price       Decimal           @db.Decimal(10, 2)
   quantity              Int              @default(1)
   subtotal    Decimal          @db.Decimal(10, 2)
+  selected_sugar_type   SugarType?
   is_active   Boolean          @default(true)
   created_at  DateTime         @default(now())
   updated_at  DateTime         @updatedAt

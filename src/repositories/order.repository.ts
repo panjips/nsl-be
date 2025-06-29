@@ -123,11 +123,12 @@ export class OrderRepository {
             },
             include: {
                 user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        phone_number: true,
+                    include: {
+                        role: {
+                            select: {
+                                name: true,
+                            },
+                        },
                     },
                 },
                 items: {
@@ -557,11 +558,32 @@ export class OrderRepository {
         });
     }
 
-    async getOrderStatistics(userId: number) {
+    async getOrderStatistics(userId: number, startDate?: Date, endDate?: Date) {
+        const whereClause: any = {
+            is_active: true,
+            user_id: userId,
+        };
+
+        if (startDate) {
+            whereClause.order_date = {
+                gte: startDate,
+            };
+        }
+
+        if (endDate) {
+            whereClause.order_date = {
+                lte: endDate,
+            };
+        }
+        if (startDate && endDate) {
+            whereClause.order_date = {
+                gte: startDate,
+                lte: endDate,
+            };
+        }
         return await this.prisma.order.findMany({
             where: {
-                user_id: userId,
-                is_active: true,
+                ...whereClause,
                 order_status: OrderStatus.COMPLETED,
                 payment: {
                     trx_status: TransactionStatus.SUCCESS,

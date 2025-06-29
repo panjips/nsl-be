@@ -10,6 +10,7 @@ import {
     response,
     next,
     BaseHttpController,
+    queryParam,
 } from "inversify-express-utils";
 import type { NextFunction, Request, Response } from "express";
 import { ApiResponse, CustomError, ILogger } from "utils";
@@ -23,6 +24,7 @@ import {
     BulkCreateProductRecipeDTO,
     BulkCreateAddonRecipeDTO,
 } from "dtos";
+import { SugarType } from "@prisma/client";
 
 @controller("/recipe", TYPES.AuthMiddleware)
 export class RecipeController extends BaseHttpController {
@@ -36,7 +38,7 @@ export class RecipeController extends BaseHttpController {
 
     // ================ PRODUCT RECIPES ================
 
-    @httpGet("/product", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/product", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getAllProductRecipes(@response() res: Response, @next() next: NextFunction) {
         try {
             const productRecipes = await this.productRecipeService.getAllProductRecipes();
@@ -49,8 +51,9 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpGet("/product/:productId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/product/:productId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getProductRecipesByProductId(
+        @queryParam("type") sugarType: string | undefined,
         @request() req: Request,
         @response() res: Response,
         @next() next: NextFunction,
@@ -62,7 +65,7 @@ export class RecipeController extends BaseHttpController {
                 throw new CustomError("Invalid product ID", HttpStatus.BAD_REQUEST);
             }
 
-            const productRecipes = await this.productRecipeService.getProductRecipesByProductId(productId);
+            const productRecipes = await this.productRecipeService.getProductRecipesByProductId(productId, sugarType);
             return res
                 .status(HttpStatus.OK)
                 .json(ApiResponse.success(`Recipes for product ${productId} retrieved successfully`, productRecipes));
@@ -72,7 +75,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpGet("/product/inventory/:inventoryId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/product/inventory/:inventoryId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getProductRecipesByInventoryId(
         @request() req: Request,
         @response() res: Response,
@@ -100,7 +103,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpPost("/product", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateProductRecipeDTO))
+    @httpPost("/product", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(CreateProductRecipeDTO))
     public async createProductRecipe(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const productRecipe = await this.productRecipeService.createProductRecipe(req.body);
@@ -115,7 +118,11 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpPost("/product/bulk", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(BulkCreateProductRecipeDTO))
+    @httpPost(
+        "/product/bulk",
+        RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]),
+        ZodValidation(BulkCreateProductRecipeDTO),
+    )
     public async bulkCreateProductRecipes(
         @request() req: Request,
         @response() res: Response,
@@ -132,7 +139,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpPut("/product/:id", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateProductRecipeDTO))
+    @httpPut("/product/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(UpdateProductRecipeDTO))
     public async updateProductRecipe(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -151,7 +158,11 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpPut("/product/:id/bulk", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(BulkCreateProductRecipeDTO))
+    @httpPut(
+        "/product/:id/bulk",
+        RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]),
+        ZodValidation(BulkCreateProductRecipeDTO),
+    )
     public async bulkUpdateProductRecipes(
         @request() req: Request,
         @response() res: Response,
@@ -166,6 +177,7 @@ export class RecipeController extends BaseHttpController {
 
             const data = {
                 product_id: productId,
+                sugar_type: req.body.sugar_type,
                 recipes: req.body.recipes,
             };
 
@@ -179,7 +191,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/product/:productId", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/product/:productId", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async deleteProductRecipesByProductId(
         @request() req: Request,
         @response() res: Response,
@@ -208,7 +220,7 @@ export class RecipeController extends BaseHttpController {
 
     // ================ ADDON RECIPES ================
 
-    @httpGet("/addon", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/addon", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getAllAddonRecipes(@response() res: Response, @next() next: NextFunction) {
         try {
             const addonRecipes = await this.addonRecipeService.getAllAddonRecipes();
@@ -221,7 +233,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpGet("/addon/:addonId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/addon/:addonId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getAddonRecipesByAddonId(
         @request() req: Request,
         @response() res: Response,
@@ -244,7 +256,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpGet("/addon/inventory/:inventoryId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR]))
+    @httpGet("/addon/inventory/:inventoryId", RoleMiddlewareFactory([Role.PEMILIK, Role.KASIR, Role.STAF]))
     public async getAddonRecipesByInventoryId(
         @request() req: Request,
         @response() res: Response,
@@ -272,7 +284,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpPost("/addon", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateAddonRecipeDTO))
+    @httpPost("/addon", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(CreateAddonRecipeDTO))
     public async createAddonRecipe(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const addonRecipe = await this.addonRecipeService.createAddonRecipe(req.body);
@@ -285,7 +297,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpPost("/addon/bulk", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(BulkCreateAddonRecipeDTO))
+    @httpPost("/addon/bulk", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(BulkCreateAddonRecipeDTO))
     public async bulkCreateAddonRecipes(
         @request() req: Request,
         @response() res: Response,
@@ -302,7 +314,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpPut("/addon/:id", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateAddonRecipeDTO))
+    @httpPut("/addon/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(UpdateAddonRecipeDTO))
     public async updateAddonRecipe(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -321,7 +333,11 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpPut("/addon/:id/bulk", RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(BulkCreateAddonRecipeDTO))
+    @httpPut(
+        "/addon/:id/bulk",
+        RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]),
+        ZodValidation(BulkCreateAddonRecipeDTO),
+    )
     public async bulkUpdateAddonRecipes(
         @request() req: Request,
         @response() res: Response,
@@ -349,7 +365,7 @@ export class RecipeController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/addon/:addonId", RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/addon/:addonId", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async deleteAddonRecipesByAddonId(
         @request() req: Request,
         @response() res: Response,
