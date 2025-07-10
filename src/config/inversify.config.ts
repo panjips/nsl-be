@@ -40,6 +40,7 @@ import {
     ReservationService,
     InventoryUsageService,
     ReportService,
+    PaymentWorker,
 } from "services";
 import {
     ILogger,
@@ -67,6 +68,7 @@ container.bind<R2Service>(TYPES.R2Service).to(R2Service).inSingletonScope();
 container.bind<QueueService>(TYPES.QueueService).to(QueueService).inSingletonScope();
 container.bind<SocketService>(TYPES.SocketService).to(SocketService).inSingletonScope();
 container.bind<MidtransService>(TYPES.MidtransService).to(MidtransService).inSingletonScope();
+container.bind<PaymentWorker>(TYPES.PaymentWorkerService).to(PaymentWorker).inSingletonScope();
 
 container.bind<AuthRepository>(TYPES.AuthRepository).to(AuthRepository);
 container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository);

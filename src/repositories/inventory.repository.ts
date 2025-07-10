@@ -84,4 +84,30 @@ export class InventoryRepository {
         this.logger.error(`Failed to delete inventory item with ID ${id}`);
         return false;
     }
+
+    async inventoryLowStockCount(id: number): Promise<boolean> {
+        const inventory = await this.prisma.inventory.findFirst({
+            where: {
+                id,
+                is_active: true,
+            },
+        });
+
+        if (!inventory) {
+            this.logger.warn(`Inventory item with ID ${id} not found`);
+            return false;
+        }
+
+        if (inventory.quantity <= inventory.min_quantity) {
+            this.logger.warn(
+                `Inventory item with ID ${id} is low on stock: ${inventory.quantity} < ${inventory.min_quantity}`,
+            );
+            return true;
+        } else {
+            this.logger.info(
+                `Inventory item with ID ${id} has sufficient stock: ${inventory.quantity} >= ${inventory.min_quantity}`,
+            );
+            return false;
+        }
+    }
 }

@@ -16,3 +16,4 @@ export * from "./cateringPackage.service";
 export * from "./reservation.service";
 export * from "./inventoryUsage.service";
 export * from "./report.service";
+export * from "./paymentWorker.service";

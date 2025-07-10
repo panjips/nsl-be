@@ -9,6 +9,7 @@ import { ILogger, SocketService } from "utils";
 import { TYPES } from "constant";
 import { swagger } from "docs";
 import cors from "cors";
+import { PaymentWorker } from "services";
 
 const server = new InversifyExpressServer(container, null, {
     rootPath: "/api",
@@ -17,7 +18,13 @@ const server = new InversifyExpressServer(container, null, {
 server.setConfig((app) => {
     app.use(
         cors({
-            origin: ["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:5173",  "http://127.0.0.1:9090", "https://nsl.panjip.my.id"],
+            origin: [
+                "http://localhost:8000",
+                "http://127.0.0.1:8000",
+                "http://localhost:5173",
+                "http://127.0.0.1:9090",
+                "https://nsl.panjip.my.id",
+            ],
             credentials: true,
         }),
     );
@@ -33,6 +40,10 @@ server.setErrorConfig((app) => {
 
 const logger = container.get<ILogger>(TYPES.Logger);
 const socket = container.get<SocketService>(TYPES.SocketService);
+const paymentWorker = container.get<PaymentWorker>(TYPES.PaymentWorkerService);
+paymentWorker.startExpiryCheckSchedule().catch((err) => {
+    logger.error(`Failed to start payment expiry check schedule: ${err}`);
+});
 
 const app = server.build();
 

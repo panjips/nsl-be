@@ -1,9 +1,9 @@
 import { inject, injectable } from "inversify";
 import { HttpStatus, TYPES } from "constant";
-import { ILogger, CustomError, MidtransService, MailService } from "utils";
+import { ILogger, CustomError, MidtransService, MailService, getFormattedStartTime } from "utils";
 import { PaymentRepository, OrderRepository } from "repositories";
 import { BaseService } from "./base.service";
-import { CreateOrderAddonItem, CreatePayment, MidtransItems, OrderMapping, UpdatePayment } from "models";
+import { CreateOrderAddonItem, CreatePayment, MidtransItems, OrderMapping } from "models";
 import { OrderStatus, PaymentType, TransactionStatus } from "@prisma/client";
 import { MidtransNotificationType } from "dtos";
 import { config } from "config";
@@ -11,6 +11,7 @@ import crypto from "node:crypto";
 import { Decimal } from "@prisma/client/runtime/library";
 import { InventoryUsageService } from "./inventoryUsage.service";
 import { Server } from "socket.io";
+import { PaymentWorker } from "./paymentWorker.service";
 
 @injectable()
 export class PaymentService extends BaseService {
@@ -21,57 +22,10 @@ export class PaymentService extends BaseService {
         @inject(TYPES.Logger) private readonly logger: ILogger,
         @inject(TYPES.SocketService) private readonly ws: Server,
         @inject(TYPES.MailService) private readonly ms: MailService,
+        @inject(TYPES.PaymentWorkerService) private readonly paymentWorker: PaymentWorker,
         @inject(TYPES.MidtransService) private readonly midtrans: MidtransService,
     ) {
         super();
-    }
-
-    async getAllPayments() {
-        try {
-            const payments = await this.paymentRepository.findAll();
-            return this.excludeMetaFields(payments);
-        } catch (error) {
-            this.logger.error(`Error getting all payments: ${error instanceof Error ? error.message : String(error)}`);
-            throw new CustomError("Failed to retrieve payments", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    async getPaymentById(id: number) {
-        try {
-            const payment = await this.paymentRepository.findById(id);
-
-            if (!payment) {
-                throw new CustomError("Payment not found", HttpStatus.NOT_FOUND);
-            }
-
-            return this.excludeMetaFields(payment);
-        } catch (error) {
-            if (error instanceof CustomError) throw error;
-
-            this.logger.error(
-                `Error getting payment by ID ${id}: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            throw new CustomError("Failed to retrieve payment", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    async getPaymentsByOrderId(orderId: number) {
-        try {
-            const order = await this.orderRepository.findById(orderId);
-            if (!order) {
-                throw new CustomError("Order not found", HttpStatus.NOT_FOUND);
-            }
-
-            const payments = await this.paymentRepository.findByOrderId(orderId);
-            return this.excludeMetaFields(payments);
-        } catch (error) {
-            if (error instanceof CustomError) throw error;
-
-            this.logger.error(
-                `Error getting payments for order ID ${orderId}: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            throw new CustomError("Failed to retrieve payments", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     async createPayment(payment_type: PaymentType, order: any, data?: MidtransItems[]) {
@@ -104,10 +58,18 @@ export class PaymentService extends BaseService {
             };
             await this.paymentRepository.create(payment as CreatePayment);
 
+            const startTime = getFormattedStartTime();
+            const expiryMinutes = 15;
+
             const parameter = {
                 transaction_details: {
                     order_id: this.formOrderId(order.id),
                     gross_amount: Number(order.total_amount),
+                },
+                expiry: {
+                    start_time: startTime,
+                    unit: "minutes",
+                    duration: expiryMinutes,
                 },
                 customer_details: {
                     first_name: order.user ? order.user.name : "POS System",
@@ -117,6 +79,10 @@ export class PaymentService extends BaseService {
             };
 
             const snap = await this.midtrans.charge(parameter);
+
+            const expiryDate = new Date();
+            expiryDate.setMinutes(expiryDate.getMinutes() + expiryMinutes);
+            await this.paymentWorker.scheduleExpiryCheck(order.id, expiryDate);
 
             return {
                 order_id: order.id,
@@ -217,8 +183,7 @@ export class PaymentService extends BaseService {
                 }
 
                 if (order.user?.role.name === "Pelanggan") {
-                    // I want to send invoice to customer via email
-                    console.log(order.items);
+                    await this.ms.sendInvoice(order.user.email, order.items);
                 }
 
                 const update = await this.orderRepository.update(Number(order_id), {
@@ -246,58 +211,6 @@ export class PaymentService extends BaseService {
                 `Error updating Midtrans payment for order ${data.order_id}: ${error instanceof Error ? error.message : String(error)}`,
             );
             throw new CustomError("Failed to update Midtrans payment", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    async updatePayment(id: number, data: UpdatePayment) {
-        try {
-            const existingPayment = await this.paymentRepository.findById(id);
-            if (!existingPayment) {
-                throw new CustomError("Payment not found", HttpStatus.NOT_FOUND);
-            }
-
-            const order = await this.orderRepository.findById(existingPayment.order_id);
-            if (!order) {
-                throw new CustomError("Associated order not found", HttpStatus.NOT_FOUND);
-            }
-        } catch (error) {
-            if (error instanceof CustomError) throw error;
-
-            this.logger.error(
-                `Error updating payment ${id}: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            throw new CustomError("Failed to update payment", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    async getPaymentStatistics() {
-        try {
-            const today = new Date();
-            const startOfDay = new Date(today);
-            startOfDay.setHours(0, 0, 0, 0);
-
-            const endOfDay = new Date(today);
-            endOfDay.setHours(23, 59, 59, 999);
-
-            const dailyTotal = await this.paymentRepository.getTotalPaymentsByDateRange(startOfDay, endOfDay);
-
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-
-            const monthlyTotal = await this.paymentRepository.getTotalPaymentsByDateRange(startOfMonth, endOfMonth);
-
-            const paymentMethodSummary = await this.paymentRepository.getPaymentSummaryByType();
-
-            return {
-                dailyTotal,
-                monthlyTotal,
-                paymentMethodSummary,
-            };
-        } catch (error) {
-            this.logger.error(
-                `Error getting payment statistics: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            throw new CustomError("Failed to retrieve payment statistics", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

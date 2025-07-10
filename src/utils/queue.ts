@@ -105,4 +105,36 @@ export class QueueService {
 
         this.eventHandlers.set(queueName, queueEvents);
     }
+
+    public async addRecurringJob(
+        queueName: string,
+        jobKey: string,
+        data: any,
+        cronExpression: string,
+    ): Promise<Job> {
+        const queue = this.getOrCreateQueue(queueName);
+        const job = await queue.add(jobKey, data, {
+            repeat: {
+                pattern: cronExpression,
+            },
+        });
+
+        this.logger.info(
+            `Recurring job added to queue "${queueName}" with key "${jobKey}" and cron schedule "${cronExpression}"`,
+        );
+        return job;
+    }
+
+    private getOrCreateQueue(queueName: string): Queue {
+        if (!this.queues.has(queueName)) {
+            this.createQueue(queueName);
+        }
+        
+        const queue = this.queues.get(queueName);
+        if (!queue) {
+            throw new Error(`Queue ${queueName} not found even though it was just created`);
+        }
+        
+        return queue;
+    }
 }

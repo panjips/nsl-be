@@ -156,16 +156,29 @@ export class UserRepository {
         }
     }
 
-    async getUserByRole(role: string) {
+    async getUserByRole(role: Role | Role[]) {
         try {
-            const users = await this.prisma.user.findMany({
-                where: {
-                    role: {
-                        name: role,
+            const whereClause: any = {
+                is_active: true,
+            };
+            if (Array.isArray(role)) {
+                whereClause.role = {
+                    name: {
+                        in: role,
                     },
-                },
+                };
+            } else {
+                whereClause.role = {
+                    name: role,
+                };
+            }
+            const users = await this.prisma.user.findMany({
+                where: whereClause,
                 include: {
                     role: true,
+                },
+                orderBy: {
+                    id: "asc",
                 },
             });
 

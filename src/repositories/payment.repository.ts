@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
-import type { Payment, PrismaClient } from "@prisma/client";
+import { TransactionStatus, type Payment, type PrismaClient } from "@prisma/client";
 import { ILogger } from "utils";
 import { CreatePayment, UpdatePayment } from "models";
 
@@ -136,39 +136,26 @@ export class PaymentRepository {
         return false;
     }
 
-    async getTotalPaymentsByDateRange(startDate: Date, endDate: Date): Promise<number> {
-        const result = await this.prisma.payment.aggregate({
-            _sum: {
-                paid_amount: true,
+    async findPendingPaymentsOlderThan(minutes: number) {
+    const cutoffTime = new Date();
+    cutoffTime.setMinutes(cutoffTime.getMinutes() - minutes);
+
+    return await this.prisma.payment.findMany({
+        where: {
+            trx_status: TransactionStatus.PENDING,
+            created_at: {
+                lt: cutoffTime
             },
-            where: {
-                trx_time: {
-                    gte: startDate,
-                    lte: endDate,
-                },
-                is_active: true,
-            },
-        });
-
-        return result._sum.paid_amount?.toNumber() || 0;
-    }
-
-    async getPaymentSummaryByType(): Promise<{ payment_type: string; count: number; total_amount: number }[]> {
-        const summary = await this.prisma.$queryRaw<{ payment_type: string; count: string; total_amount: string }[]>`
-            SELECT 
-                payment_type::text as payment_type, 
-                COUNT(*)::text as count,
-                SUM(paid_amount)::text as total_amount
-            FROM "Payment"
-            WHERE is_active = true
-            GROUP BY payment_type
-            ORDER BY total_amount DESC
-        `;
-
-        return summary.map((item) => ({
-            payment_type: item.payment_type,
-            count: Number(item.count),
-            total_amount: Number(item.total_amount),
-        }));
-    }
+            is_active: true
+        },
+        include: {
+            order: {
+                select: {
+                    id: true,
+                    order_status: true
+                }
+            }
+        }
+    });
+}
 }

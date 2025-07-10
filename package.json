@@ -50,6 +50,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.797.0",
     "@prisma/client": "^6.6.0",
+    "@types/pdfkit": "^0.14.0",
     "bcrypt": "^5.1.1",
     "bullmq": "^5.51.1",
     "cookie-parser": "^1.4.7",
@@ -57,6 +58,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
+    "get-stream": "^9.0.1",
     "inversify": "^6.2.2",
     "inversify-express-utils": "^6.5.0",
     "ioredis": "^5.6.1",
@@ -65,6 +67,7 @@
     "multer": "^1.4.5-lts.2",
     "nanoid": "^5.1.5",
     "nodemailer": "^6.10.1",
+    "pdfkit": "^0.17.1",
     "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.1",
     "swagger-themes": "^1.4.3",

@@ -24,7 +24,6 @@ import {
     BulkCreateProductRecipeDTO,
     BulkCreateAddonRecipeDTO,
 } from "dtos";
-import { SugarType } from "@prisma/client";
 
 @controller("/recipe", TYPES.AuthMiddleware)
 export class RecipeController extends BaseHttpController {
