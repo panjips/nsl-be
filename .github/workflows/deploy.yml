@@ -40,5 +40,5 @@ jobs:
             git reset --hard
             git pull origin main
             docker-compose build --no-cache
-            # docker compose down --volumes
+            docker compose down --volumes
             docker-compose up -d

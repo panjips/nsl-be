@@ -271,6 +271,7 @@ model Payment {
   id              Int          @id @default(autoincrement())
   order_id        Int          @unique
   payment_type    PaymentType
+  trx_token       String?
   trx_status      TransactionStatus
   trx_time        DateTime?
   paid_amount     Decimal      @db.Decimal(10, 2)

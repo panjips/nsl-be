@@ -56,7 +56,7 @@ export class PaymentService extends BaseService {
                 trx_status: TransactionStatus.PENDING,
                 trx_time: new Date(),
             };
-            await this.paymentRepository.create(payment as CreatePayment);
+            const paymentResult = await this.paymentRepository.create(payment as CreatePayment);
 
             const startTime = getFormattedStartTime();
             const expiryMinutes = 15;
@@ -83,6 +83,10 @@ export class PaymentService extends BaseService {
             const expiryDate = new Date();
             expiryDate.setMinutes(expiryDate.getMinutes() + expiryMinutes);
             await this.paymentWorker.scheduleExpiryCheck(order.id, expiryDate);
+
+            await this.paymentRepository.update(paymentResult.id, {
+                trx_token: snap,
+            });
 
             return {
                 order_id: order.id,
@@ -262,6 +266,30 @@ export class PaymentService extends BaseService {
                 `Error converting order to order mapping for order ${order_id}: ${error instanceof Error ? error.message : String(error)}`,
             );
             throw new CustomError("Failed to convert order to order mapping", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getPaymentToken(payment_id: number) {
+        try {
+            const payment = await this.paymentRepository.findById(payment_id);
+            if (!payment) {
+                throw new CustomError("Payment not found", HttpStatus.NOT_FOUND);
+            }
+
+            if (payment.trx_status !== TransactionStatus.PENDING) {
+                throw new CustomError("Payment is not in pending status", HttpStatus.BAD_REQUEST);
+            }
+
+            return {
+                token: payment.trx_token,
+            };
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+
+            this.logger.error(
+                `Error getting payment token for payment ${payment_id}: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to get payment token", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
