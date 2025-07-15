@@ -13,6 +13,9 @@ CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'EXPIRE', 'FAILURE', 'SUCCES
 -- CreateEnum
 CREATE TYPE "ReservationStatus" AS ENUM ('PENDING', 'CONFIRMED', 'WAITING_DEPOSIT', 'DEPOSIT_PAID', 'PAYMENT_PENDING', 'COMPLETED', 'CANCELLED');
 
+-- CreateEnum
+CREATE TYPE "SugarType" AS ENUM ('NORMAL', 'LESS_SUGAR', 'NO_SUGAR');
+
 -- CreateTable
 CREATE TABLE "Role" (
     "id" SERIAL NOT NULL,
@@ -152,6 +155,7 @@ CREATE TABLE "ProductRecipe" (
     "product_id" INTEGER NOT NULL,
     "inventory_id" INTEGER NOT NULL,
     "quantity_used" DECIMAL(10,2) NOT NULL,
+    "sugar_type" "SugarType",
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -200,6 +204,7 @@ CREATE TABLE "OrderProductItem" (
     "price" DECIMAL(10,2) NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
     "subtotal" DECIMAL(10,2) NOT NULL,
+    "selected_sugar_type" "SugarType",
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -230,6 +235,7 @@ CREATE TABLE "Payment" (
     "id" SERIAL NOT NULL,
     "order_id" INTEGER NOT NULL,
     "payment_type" "PaymentType" NOT NULL,
+    "trx_token" TEXT,
     "trx_status" "TransactionStatus" NOT NULL,
     "trx_time" TIMESTAMP(3),
     "paid_amount" DECIMAL(10,2) NOT NULL,
@@ -321,6 +327,23 @@ CREATE TABLE "Settings" (
     CONSTRAINT "Settings_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "InventoryOpname" (
+    "id" SERIAL NOT NULL,
+    "inventory_id" INTEGER NOT NULL,
+    "actual_quantity" DECIMAL(10,2) NOT NULL,
+    "system_quantity" DECIMAL(10,2) NOT NULL,
+    "difference" DECIMAL(10,2) NOT NULL,
+    "opname_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "notes" TEXT,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "InventoryOpname_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -392,3 +415,6 @@ ALTER TABLE "InventoryUsage" ADD CONSTRAINT "InventoryUsage_order_id_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "InventoryUsage" ADD CONSTRAINT "InventoryUsage_inventory_id_fkey" FOREIGN KEY ("inventory_id") REFERENCES "Inventory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InventoryOpname" ADD CONSTRAINT "InventoryOpname_inventory_id_fkey" FOREIGN KEY ("inventory_id") REFERENCES "Inventory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

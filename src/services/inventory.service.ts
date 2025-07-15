@@ -3,7 +3,10 @@ import { HttpStatus, TYPES } from "constant";
 import { ILogger, CustomError } from "utils";
 import { InventoryRepository } from "repositories";
 import { BaseService } from "./base.service";
-import { CreateInventory, UpdateInventory } from "models";
+import { CreateInventory, CreateInventoryOpname, UpdateInventory } from "models";
+import { CreateInventoryOpnameDTOType } from "dtos";
+import { Decimal } from "@prisma/client/runtime/library";
+import { InventoryOpname } from "@prisma/client";
 
 @injectable()
 export class InventoryService extends BaseService {
@@ -66,6 +69,49 @@ export class InventoryService extends BaseService {
                 `Error creating inventory item: ${error instanceof Error ? error.message : String(error)}`,
             );
             throw new CustomError("Failed to create inventory item", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async createInventoryOpname(data: CreateInventoryOpnameDTOType) {
+        try {
+            const existingInventory = await this.inventoryRepository.findById(data.inventory_id);
+
+            if (!existingInventory) {
+                throw new CustomError("Inventory item not found", HttpStatus.NOT_FOUND);
+            }
+
+            const calculatedDifference = new Decimal(data.actual_quantity).minus(existingInventory.quantity);
+
+            const inventoryOpname: CreateInventoryOpname = {
+                inventory_id: existingInventory.id,
+                actual_quantity: new Decimal(data.actual_quantity),
+                system_quantity: existingInventory.quantity,
+                difference: calculatedDifference,
+                opname_date: new Date(),
+                notes: data.notes || "",
+                is_active: true,
+            };
+
+            await this.inventoryRepository.update(existingInventory.id, {
+                quantity: new Decimal(data.actual_quantity),
+            });
+
+            const opname = await this.inventoryRepository.createOpname(inventoryOpname);
+            return this.excludeMetaFields(opname);
+        } catch (error) {
+            this.logger.error(
+                `Error creating inventory opname: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to create inventory opname", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getAllInventoryOpnames() {
+        try {
+            const opnames = await this.inventoryRepository.findAllOpnames();
+            return opnames;
+        } catch (error) {
+            throw new CustomError("Failed to create inventory opname", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -167,6 +167,7 @@ model Inventory {
   productRecipes ProductRecipe[]
   addonRecipes   AddonRecipe[]
   inventoryUsages InventoryUsage[]
+  inventoryOpnames InventoryOpname[]
 }
 
 model Purchase {
@@ -363,4 +364,20 @@ model Settings{
 
   created_at      DateTime          @default(now())
   updated_at      DateTime          @updatedAt
+}
+
+model InventoryOpname{
+  id           Int        @id @default(autoincrement())
+  inventory_id  Int
+  actual_quantity      Decimal    @db.Decimal(10, 2)
+  system_quantity    Decimal    @db.Decimal(10, 2)
+  difference    Decimal    @db.Decimal(10, 2)
+  opname_date   DateTime   @default(now())
+  notes         String?
+  is_active     Boolean    @default(true)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  deleted_at    DateTime?
+
+  inventory     Inventory @relation(fields: [inventory_id], references: [id])
 }

@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "constant";
 import type { Inventory, PrismaClient } from "@prisma/client";
 import { ILogger } from "utils";
-import { CreateInventory, UpdateInventory } from "models";
+import { CreateInventory, CreateInventoryOpname, UpdateInventory } from "models";
 
 @injectable()
 export class InventoryRepository {
@@ -63,6 +63,28 @@ export class InventoryRepository {
 
         this.logger.info(`Inventory item with ID ${id} updated in the database`);
         return data;
+    }
+
+    async createOpname(data: CreateInventoryOpname) {
+        const inventory = await this.prisma.inventoryOpname.create({
+            data: {
+                ...data,
+            },
+        });
+
+        this.logger.info(`Inventory opname created with ID ${inventory.id}`);
+        return inventory;
+    }
+
+    async findAllOpnames() {
+        return await this.prisma.inventoryOpname.findMany({
+            where: {
+                is_active: true,
+            },
+            include: {
+                inventory: true,
+            },
+        });
     }
 
     async delete(id: number): Promise<boolean> {

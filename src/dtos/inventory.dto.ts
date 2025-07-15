@@ -15,5 +15,12 @@ export const UpdateInventoryDTO = z.object({
     is_active: z.boolean().optional(),
 });
 
+export const CreateInventoryOpnameDTO = z.object({
+    inventory_id: z.number().int().min(1, "Inventory ID is required"),
+    actual_quantity: z.number().min(0, "Actual quantity must be at least 0"),
+    notes: z.string().optional(),
+});
+
 export type CreateInventoryDTOType = z.infer<typeof CreateInventoryDTO>;
+export type CreateInventoryOpnameDTOType = z.infer<typeof CreateInventoryOpnameDTO>;
 export type UpdateInventoryDTOType = z.infer<typeof UpdateInventoryDTO>;

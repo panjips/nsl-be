@@ -15,7 +15,7 @@ import type { NextFunction, Request, Response } from "express";
 import { ApiResponse, CustomError, ILogger } from "utils";
 import { InventoryService, InventoryUsageService } from "services";
 import { RoleMiddlewareFactory, ZodValidation } from "middleware";
-import { CreateInventoryDTO, UpdateInventoryDTO } from "dtos";
+import { CreateInventoryDTO, CreateInventoryOpnameDTO, UpdateInventoryDTO } from "dtos";
 
 @controller("/inventory", TYPES.AuthMiddleware)
 export class InventoryController extends BaseHttpController {
@@ -66,6 +66,19 @@ export class InventoryController extends BaseHttpController {
         }
     }
 
+    @httpGet("/opname", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
+    public async getAllInventoryOpnames(@response() res: Response, @next() next: NextFunction) {
+        try {
+            const inventory = await this.inventoryService.getAllInventoryOpnames();
+            return res
+                .status(HttpStatus.OK)
+                .json(ApiResponse.success("Inventory opnames item retrieved successfully", inventory));
+        } catch (error) {
+            this.logger.error("Error retrieving inventory opnames");
+            next(error);
+        }
+    }
+
     @httpGet("/:id", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async getInventoryById(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
@@ -81,6 +94,21 @@ export class InventoryController extends BaseHttpController {
                 .json(ApiResponse.success("Inventory item retrieved successfully", inventory));
         } catch (error) {
             this.logger.error(`Error retrieving inventory item with ID ${req.params.id}`);
+            next(error);
+        }
+    }
+
+    @httpPost("/opname", RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(CreateInventoryOpnameDTO))
+    public async createInventoryOpname(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
+        try {
+            const inventory = await this.inventoryService.createInventoryOpname(req.body);
+            return res
+                .status(HttpStatus.CREATED)
+                .json(ApiResponse.success("Inventory opname created successfully", inventory));
+        } catch (error) {
+            this.logger.error(
+                `Error creating inventory item: ${error instanceof Error ? error.message : String(error)}`,
+            );
             next(error);
         }
     }

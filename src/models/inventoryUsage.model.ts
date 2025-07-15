@@ -1,3 +1,4 @@
+import { InventoryOpname } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
 export type CreateInventoryUsage = {
@@ -40,3 +41,5 @@ export interface InventoryUsageReport {
     total_quantity_used: number;
     current_stock: number;
 }
+
+export type CreateInventoryOpname = Omit<InventoryOpname, "id" | "created_at" | "updated_at" | "deleted_at">;
