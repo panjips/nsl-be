@@ -120,7 +120,7 @@ export class InventoryRepository {
             return false;
         }
 
-        if (inventory.quantity <= inventory.min_quantity) {
+        if (inventory.quantity.lte(inventory.min_quantity)) {
             this.logger.warn(
                 `Inventory item with ID ${id} is low on stock: ${inventory.quantity} < ${inventory.min_quantity}`,
             );

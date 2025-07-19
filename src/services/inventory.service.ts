@@ -6,7 +6,6 @@ import { BaseService } from "./base.service";
 import { CreateInventory, CreateInventoryOpname, UpdateInventory } from "models";
 import { CreateInventoryOpnameDTOType } from "dtos";
 import { Decimal } from "@prisma/client/runtime/library";
-import { InventoryOpname } from "@prisma/client";
 
 @injectable()
 export class InventoryService extends BaseService {

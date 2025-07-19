@@ -54,7 +54,7 @@ export class CategoryController extends BaseHttpController {
         }
     }
 
-    @httpPost("/", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(CreateCategoryDTO))
+    @httpPost("/", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(CreateCategoryDTO))
     public async createCategory(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const category = await this.categoryService.createCategory(req.body);
@@ -65,7 +65,7 @@ export class CategoryController extends BaseHttpController {
         }
     }
 
-    @httpPut("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]), ZodValidation(UpdateCategoryDTO))
+    @httpPut("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]), ZodValidation(UpdateCategoryDTO))
     public async updateCategory(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
@@ -82,7 +82,7 @@ export class CategoryController extends BaseHttpController {
         }
     }
 
-    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK]))
+    @httpDelete("/:id", TYPES.AuthMiddleware, RoleMiddlewareFactory([Role.PEMILIK, Role.STAF]))
     public async deleteCategory(@request() req: Request, @response() res: Response, @next() next: NextFunction) {
         try {
             const id = Number(req.params.id);
