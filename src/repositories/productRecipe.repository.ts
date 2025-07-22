@@ -44,7 +44,7 @@ export class ProductRecipeRepository {
                 inventory: true,
             },
             orderBy: {
-                created_at: "asc",
+                id: "asc",
             },
         });
     }

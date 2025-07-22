@@ -228,6 +228,65 @@ export class ProductRecipeService extends BaseService {
         }
     }
 
+    async bulkUpdateProductRecipes(data: {
+        product_id: number;
+        sugar_type: string;
+        recipes: { inventory_id: number; quantity_used: number }[];
+    }) {
+        try {
+            const product = await this.productRepository.findById(data.product_id);
+            if (!product) {
+                throw new CustomError("Product not found", HttpStatus.NOT_FOUND);
+            }
+
+            const inventoryIds = new Set(data.recipes.map((recipe) => recipe.inventory_id));
+            for (const inventoryId of inventoryIds) {
+                const inventory = await this.inventoryRepository.findById(inventoryId);
+                if (!inventory) {
+                    throw new CustomError(`Inventory item with ID ${inventoryId} not found`, HttpStatus.NOT_FOUND);
+                }
+            }
+            const existingRecipes = await this.productRecipeRepository.findByProductIdAndSugarType(
+                data.product_id,
+                data.sugar_type as SugarType,
+            );
+            if (!existingRecipes) {
+                throw new CustomError("No existing recipes found for the product", HttpStatus.NOT_FOUND);
+            }
+
+            const updatedRecipes = data.recipes.map((recipe) => ({
+                ...recipe,
+                product_id: data.product_id,
+                sugar_type: data.sugar_type as SugarType,
+            }));
+
+            const updatedCount = await this.productRecipeRepository.createMany(
+                data.product_id,
+                data.sugar_type as SugarType,
+                updatedRecipes,
+            );
+            if (updatedCount === 0) {
+                throw new CustomError("No recipes were updated", HttpStatus.NOT_FOUND);
+            }
+
+            const productWithRecipes = await this.productRecipeRepository.findByProductIdAndSugarType(
+                data.product_id,
+                data.sugar_type as SugarType,
+            );
+            if (!productWithRecipes) {
+                throw new CustomError("No recipes found for the product", HttpStatus.NOT_FOUND);
+            }
+            return this.excludeMetaFields(productWithRecipes);
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+
+            this.logger.error(
+                `Error bulk updating product recipes: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw new CustomError("Failed to update product recipes", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     async updateProductRecipe(id: number, data: UpdateProductRecipe) {
         try {
             const existingRecipe = await this.productRecipeRepository.findById(id);

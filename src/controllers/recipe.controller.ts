@@ -180,7 +180,7 @@ export class RecipeController extends BaseHttpController {
                 recipes: req.body.recipes,
             };
 
-            await this.productRecipeService.bulkCreateProductRecipes(data);
+            await this.productRecipeService.bulkUpdateProductRecipes(data);
             return res.status(HttpStatus.OK).json(ApiResponse.success("Successfully updated recipes for product"));
         } catch (error) {
             this.logger.error(
